@@ -32,7 +32,6 @@ function ind = TraceFP_select(handles)
 			ind = selectdata('sel', 'br');
 		end
     end
-    ind
     % try to remove bad entries (does not work some of the times)
 
 %     ind(cellfun(@(x) ~isa(x,'double'),ind)) = [];

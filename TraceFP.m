@@ -151,51 +151,59 @@ function new_polygon_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 	fprintf('[TraceFP]\tNew triangle:  select three points...\n');
-
-	% get the point indices
-	pinds = zeros(1,3);
-	i=1
-    while i<=3
-        pinds(i) = TraceFP_select(handles);
-        if(length(unique(pinds(1:i))) < i || any(pinds(1:i) <= 0))
-            fprintf(['[TraceFP]\t\tFound repeated/invalid points, ', ...
-                'discarding current selection and reselect.\n']);
-        else
-            i=i+1;
+    triangle_created = false;
+    while (true)
+        % get the point indices
+        pinds = zeros(1,3);
+        i=1
+        while i<=3
+            pinds(i) = TraceFP_select(handles);
+            if (length(pinds) == 1 || pinds(1) <= 0)
+                fprintf(['[TraceFP]\t\tExit point selection.\n']);
+                if (triangle_created==1)
+                    guidata(hObject, handles);
+                end
+                return;
+            elseif(length(unique(pinds(1:i))) < i || any(pinds(1:i) <= 0))
+                fprintf(['[TraceFP]\t\tFound repeated/invalid points, ', ...
+                    'discarding current selection and reselect.\n']);
+            else
+                i=i+1;
+            end
         end
+
+        % check for invalid
+        if(length(unique(pinds)) < 3 || any(pinds <= 0))
+            fprintf(['[TraceFP]\t\tFound repeated/invalid points, ', ...
+                    'discarding selection.\n']);
+            return;
+        end
+
+        % check if triangle oriented correctly
+        orient = det([ 	(handles.control_points(pinds(1),:) ...
+                    - handles.control_points(pinds(3),:)) ;
+                (handles.control_points(pinds(2),:) ...
+                    - handles.control_points(pinds(3),:)) ]);
+        if(orient < 0)
+            fprintf('[TraceFP]\t\treordering to be counterclockwise\n');
+            pinds = fliplr(pinds);
+        end
+
+        % add this triangle
+        triangle_created = true;
+        handles.triangles = [handles.triangles; pinds];
+        fprintf('[TraceFP]\t\tadded new triangle\n');
+
+        % update rendering
+        handles.room_ids = [handles.room_ids ; handles.current_room];
+        if(handles.triangles_plot ~= 0)
+            delete(handles.triangles_plot);
+            handles.triangles_plot = 0;
+        end
+
+        % render and save data
+        TraceFP_render(hObject, handles);
     end
-
-	% check for invalid
-	if(length(unique(pinds)) < 3 || any(pinds <= 0))
-		fprintf(['[TraceFP]\t\tFound repeated/invalid points, ', ...
-				'discarding selection.\n']);
-		return;
-	end
-
-	% check if triangle oriented correctly
-	orient = det([ 	(handles.control_points(pinds(1),:) ...
-				- handles.control_points(pinds(3),:)) ;
-			(handles.control_points(pinds(2),:) ...
-				- handles.control_points(pinds(3),:)) ]);
-	if(orient < 0)
-		fprintf('[TraceFP]\t\treordering to be counterclockwise\n');
-		pinds = fliplr(pinds);
-	end
-
-	% add this triangle
-	handles.triangles = [handles.triangles; pinds];
-	fprintf('[TraceFP]\t\tadded new triangle\n');
-	
-	% update rendering
-	handles.room_ids = [handles.room_ids ; handles.current_room];
-	if(handles.triangles_plot ~= 0)
-		delete(handles.triangles_plot);
-		handles.triangles_plot = 0;
-	end
-
-	% render and save data
-	TraceFP_render(hObject, handles);
-	guidata(hObject, handles);
 
 
 

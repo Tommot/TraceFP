@@ -12,8 +12,9 @@ function [] = TraceFP_render(hObject, handles)
 
 	% set to the program's axes
 	axes(handles.axes1);
-	hold on;
-	axis manual;
+    XL=xlim;
+    YL=ylim;
+	hold off;
 
 	%-------------
 	% Wall samples 
@@ -67,5 +68,6 @@ function [] = TraceFP_render(hObject, handles)
 		% plot the triangles
 		handles.triangles_plot = patch(X, Y, C, 'EdgeAlpha', 0.2);
     end
-
+    xlim(XL);
+    ylim(YL);
 end

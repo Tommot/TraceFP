@@ -213,25 +213,32 @@ function remove_polygon_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
-	fprintf('[TraceFP]\tremove polygon...\n');
-	ind = TraceFP_findtri(handles);
-	if(ind <= 0)
-		return; % no triangle specified
-	end
+	fprintf('[TraceFP]\tremove triangle...\n');
+    triangles_removed=false;
+    while (true)
+        ind = TraceFP_findtri(handles);
+        if(ind <= 0)
+            fprintf('[TraceFP]\texit remove triangle\n');
+            if (triangles_removed)
+                guidata(hObject, handles);
+            end
+            return; % no triangle specified
+        end
 
-	% get the triangle and delete it
-	handles.triangles(ind,:) = [];
-	handles.room_ids(ind) = [];
+        % get the triangle and delete it
+        handles.triangles(ind,:) = [];
+        handles.room_ids(ind) = [];
+        triangles_removed=true;
 
-	% update rendering
-	if(handles.triangles_plot ~= 0)
-		delete(handles.triangles_plot);
-		handles.triangles_plot = 0;
-	end
+        % update rendering
+        if(handles.triangles_plot ~= 0)
+            delete(handles.triangles_plot);
+            handles.triangles_plot = 0;
+        end
 
-	% render and save data
-	TraceFP_render(hObject, handles);
-    guidata(hObject, handles);
+        % render and save data
+        TraceFP_render(hObject, handles);
+    end
 
 
 % --- Executes on button press in set_room.
@@ -277,26 +284,30 @@ function new_point_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
 	% get new point
-	BUTTON = 1;
-    while (BUTTON == 1)
+    fprintf('[TraceFP]\tnew point...\n');
+    points_created=false;
+    while (true)
         [X,Y,BUTTON] = ginput(1);
         if (BUTTON == 1)
-            fprintf('[TraceFP]\tnew point...\n');
+            fprintf('[TraceFP]\t\tinsert new point\n');
 
             % add to figure
             handles.control_points = [handles.control_points; X Y];
-            % original code from Eric
+            if(handles.control_points_plot ~= 0)
+                delete(handles.control_points_plot);
+                handles.control_points_plot = 0;
+            end
+            points_created=true;
             % render data
-            disp(handles.control_points);
             TraceFP_render(hObject, handles);
+        else
+            fprintf('[TraceFP]\texit create new point\n');
+            if (points_created)
+                guidata(hObject, handles);
+            end
+            return;
         end
     end
-    % save data
-    if(handles.control_points_plot ~= 0)
-        delete(handles.control_points_plot);
-        handles.control_points_plot = 0;
-    end
-    guidata(hObject, handles);
 
 
 % --- Executes on button press in move_point.
@@ -307,32 +318,40 @@ function move_point_Callback(hObject, eventdata, handles)
 
 	% tell user what's going on
 	fprintf('[TraceFP]\tmove point...\n');
+    points_moved=false;
 
 	% use selection tool to find a point
-	pind = TraceFP_select(handles);
-	if(pind <= 0)
-		return;
-	end
+    while (true)
+        fprintf('[TraceFP]\t\tSelect new point\n');
+        pind = TraceFP_select(handles);
+        if(pind <= 0)
+            fprintf('[TraceFP]\tExit move point\n');
+            if (points_moved)
+                guidata(hObject, handles);
+            end
+            return;
+        end
 
-	% now ask the user to click a new spot
-	fprintf('[TraceFP]\t\tSelect new location\n');
-	[X,Y] = ginput(1);
+        % now ask the user to click a new spot
+        fprintf('[TraceFP]\t\tSelect new location\n');
+        [X,Y] = ginput(1);
 
-	% set point to that location
-	handles.control_points(pind, :) = [X, Y];
+        % set point to that location
+        handles.control_points(pind, :) = [X, Y];
+        points_moved=true;
 
-	% redraw
-	if(handles.control_points_plot ~= 0)
-		delete(handles.control_points_plot);
-		handles.control_points_plot = 0;
-	end
-	if(any(handles.triangles(:) == pind) && handles.triangles_plot ~= 0)
-		delete(handles.triangles_plot);
-		handles.triangles_plot = 0;
-	end
-	TraceFP_render(hObject, handles);
-    guidata(hObject, handles);
-	fprintf('[TraceFP]\t\tpoint moved\n');
+        % redraw
+        if(handles.control_points_plot ~= 0)
+            delete(handles.control_points_plot);
+            handles.control_points_plot = 0;
+        end
+        if(any(handles.triangles(:) == pind) && handles.triangles_plot ~= 0)
+            delete(handles.triangles_plot);
+            handles.triangles_plot = 0;
+        end
+        TraceFP_render(hObject, handles);
+        fprintf('[TraceFP]\t\tpoint moved\n');
+    end
 
 
 
@@ -344,37 +363,45 @@ function remove_point_Callback(hObject, eventdata, handles)
 
 	% tell user what we're doing
 	fprintf('[TraceFP]\tremove point...\n');
+    points_removed=false;
+    while (true)
+        % use selection tool to find a point
+        pind = TraceFP_select(handles);
+        if(pind <= 0)
+            fprintf('[TraceFP]\t\texit remove points\n');
+            if (points_removed)
+                guidata(hObject, handles);
+            end
+            return;
+        end
 
-	% use selection tool to find a point
-	pind = TraceFP_select(handles);
-	if(pind <= 0)
-		return;
-	end
+        % remove triangles that contain this point
+        to_remove = any( handles.triangles == pind, 2);
+        handles.triangles( to_remove , :) = [];
+        handles.room_ids( to_remove ) = [];
 
-	% remove triangles that contain this point
-	to_remove = any( handles.triangles == pind, 2);
-	handles.triangles( to_remove , :) = [];
-	handles.room_ids( to_remove ) = [];
+        % update the indexing in remaining triangles
+        idx = [[1:pind] [pind:size(handles.control_points,1)]];
+        handles.triangles = idx( handles.triangles );
 
-	% update the indexing in remaining triangles
-	idx = [[1:pind] [pind:size(handles.control_points,1)]];
-	handles.triangles = idx( handles.triangles );
+        % remove this point from our list of points
+        handles.control_points(pind, :) = [];
 
-	% remove this point from our list of points
-	handles.control_points(pind, :) = [];
-
-	% redraw
-	if(handles.control_points_plot ~= 0)
-		delete(handles.control_points_plot);
-		handles.control_points_plot = 0;
-	end
-	if( sum(to_remove) > 0 && handles.triangles_plot ~= 0)
-		delete(handles.triangles_plot);
-		handles.triangles_plot = 0;
-	end
-	TraceFP_render(hObject, handles);
-    guidata(hObject, handles);
-	fprintf('[TraceFP]\t\tpoint removed\n');
+        % redraw
+        if(handles.control_points_plot ~= 0)
+            delete(handles.control_points_plot);
+            handles.control_points_plot = 0;
+        end
+        if( sum(to_remove) > 0 && handles.triangles_plot ~= 0)
+            delete(handles.triangles_plot);
+            handles.triangles_plot = 0;
+        end
+        fprintf('[TraceFP]\t\tpoint removed\n');
+        points_removed=true;
+        TraceFP_render(hObject, handles);
+        
+    end
+	
 
 
 % --------------------------------------------------------------------

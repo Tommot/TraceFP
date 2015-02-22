@@ -40,7 +40,8 @@ function ind = TraceFP_select(handles)
 
 	if(isempty(ind))
 		fprintf('[TraceFP]\t\tno point selected\n');
-		ind = TraceFP_select(handles);
+		ind = 0;
+        return;
 	elseif(numel(ind) > 1)
 		
         % the end of the cell array usually contains good entries

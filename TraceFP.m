@@ -287,7 +287,7 @@ function new_point_Callback(hObject, eventdata, handles)
     fprintf('[TraceFP]\tnew point...\n');
     points_created=false;
     while (true)
-        [X,Y,BUTTON] = ginput(1);
+        [X,Y,BUTTON] = myginput(1, 'crosshair');
         if (BUTTON == 1)
             fprintf('[TraceFP]\t\tinsert new point\n');
 
@@ -334,7 +334,14 @@ function move_point_Callback(hObject, eventdata, handles)
 
         % now ask the user to click a new spot
         fprintf('[TraceFP]\t\tSelect new location\n');
-        [X,Y] = ginput(1);
+        [X,Y, BUTTON] = myginput(1, 'crosshair');
+        if(BUTTON ~= 1)
+            fprintf('[TraceFP]\tExit move point\n');
+            if (points_moved)
+                guidata(hObject, handles);
+            end
+            return;
+        end
 
         % set point to that location
         handles.control_points(pind, :) = [X, Y];

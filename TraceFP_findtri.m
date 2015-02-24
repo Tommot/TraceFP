@@ -20,7 +20,11 @@ function ind = TraceFP_findtri(handles)
 	end
 
 	% get a point from user
-	[X,Y] = ginput(1);
+	[X,Y, BUTTON] = myginput(1, 'crosshair');
+    if (BUTTON~=1)
+        ind=0;
+        return;
+    end
 
 	% iterate through triangles (I know this isn't very efficient,
 	% but patience is a virtue for the user, not the programmer)

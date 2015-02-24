@@ -22,7 +22,7 @@ function ind = TraceFP_findtri(handles)
 	% get a point from user
 	[X,Y, BUTTON] = myginput(1, 'crosshair');
     if (BUTTON~=1)
-        ind=0;
+        ind=-1;
         return;
     end
 

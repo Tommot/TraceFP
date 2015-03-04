@@ -1,4 +1,4 @@
-function [] = TraceFP_render(hObject, handles)
+function [] = TraceFP_render(hObject, handles, resize)
 	% TRACEFP_RENDER(hObject, handles)
 	%
 	%	renders the currently loaded data to the axes specified
@@ -16,19 +16,6 @@ function [] = TraceFP_render(hObject, handles)
     YL=ylim;
 	hold off;
 
-	%-------------
-	% Wall samples 
-	%-------------
-
-	% check if wall samples have a handle.  if not, render them
-	if(handles.wall_samples_plot == 0 && ~isempty(handles.wall_samples))
-
-		% plot the points
-		X = handles.wall_samples.pos(1,:);
-		Y = handles.wall_samples.pos(2,:);
-		handles.wall_samples_plot = plot(X, Y, 'b.');
-	end
-
 	% --------------
 	% Control points
 	% --------------
@@ -40,7 +27,24 @@ function [] = TraceFP_render(hObject, handles)
 			plot(handles.control_points(:,1), ...
 				handles.control_points(:,2), ...
 					'*m', 'LineWidth', 2);
-	end
+    end
+    
+    %-------------
+	% Wall samples 
+	%-------------
+
+	% check if wall samples have a handle.  if not, render them
+	if(~isempty(handles.wall_samples))
+
+		% plot the points
+        if (handles.wall_samples_plot~=0)
+            delete(handles.wall_samples_plot);
+        end
+        hold on;
+		X = handles.wall_samples.pos(1,:);
+		Y = handles.wall_samples.pos(2,:);
+		handles.wall_samples_plot = plot(X, Y, 'b.');
+    end
 
 	% render triangles, if toggled
 	if(handles.triangles_plot == 0 && ~isempty(handles.triangles))
@@ -68,6 +72,9 @@ function [] = TraceFP_render(hObject, handles)
 		% plot the triangles
 		handles.triangles_plot = patch(X, Y, C, 'EdgeAlpha', 0.2);
     end
-    xlim(XL);
-    ylim(YL);
+    if (~resize)
+        xlim(XL);
+        ylim(YL);
+    end
+    guidata(hObject,handles)
 end

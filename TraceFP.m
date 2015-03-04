@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 17-Feb-2015 16:41:11
+% Last Modified by GUIDE v2.5 03-Mar-2015 19:17:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -145,7 +145,7 @@ function show_floorplan_Callback(hObject, eventdata, handles)
 
 
 % --- Executes on button press in new_polygon.
-function new_polygon_Callback(hObject, eventdata, handles)
+function new_triangle_Callback(hObject, eventdata, handles)
 % hObject    handle to new_polygon (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
@@ -155,7 +155,7 @@ function new_polygon_Callback(hObject, eventdata, handles)
     while (true)
         % get the point indices
         pinds = zeros(1,3);
-        i=1
+        i=1;
         while i<=3
             pinds(i) = TraceFP_select(handles);
             if (length(pinds) == 1 || pinds(1) <= 0)
@@ -166,7 +166,8 @@ function new_polygon_Callback(hObject, eventdata, handles)
                 return;
             elseif(length(unique(pinds(1:i))) < i || any(pinds(1:i) <= 0))
                 fprintf(['[TraceFP]\t\tFound repeated/invalid points, ', ...
-                    'discarding current selection and reselect.\n']);
+                    'exiting triangle selection.\n']);
+                return;
             else
                 i=i+1;
             end
@@ -202,7 +203,8 @@ function new_polygon_Callback(hObject, eventdata, handles)
         end
 
         % render and save data
-        TraceFP_render(hObject, handles);
+        TraceFP_render(hObject, handles, false);
+        handles=guidata(hObject);
     end
 
 
@@ -237,7 +239,8 @@ function remove_polygon_Callback(hObject, eventdata, handles)
         end
 
         % render and save data
-        TraceFP_render(hObject, handles);
+        TraceFP_render(hObject, handles, false);
+        handles=guidata(hObject);
     end
 
 
@@ -282,8 +285,8 @@ function new_point_Callback(hObject, eventdata, handles)
 % hObject    handle to new_point (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-
 	% get new point
+    handles=guidata(hObject);
     fprintf('[TraceFP]\tnew point...\n');
     points_created=false;
     while (true)
@@ -299,12 +302,10 @@ function new_point_Callback(hObject, eventdata, handles)
             end
             points_created=true;
             % render data
-            TraceFP_render(hObject, handles);
+            handles.wall_samples_plot
+            TraceFP_render(hObject, handles, false);
         else
             fprintf('[TraceFP]\texit create new point\n');
-            if (points_created)
-                guidata(hObject, handles);
-            end
             return;
         end
     end
@@ -326,9 +327,6 @@ function move_point_Callback(hObject, eventdata, handles)
         pind = TraceFP_select(handles);
         if(pind <= 0)
             fprintf('[TraceFP]\tExit move point\n');
-            if (points_moved)
-                guidata(hObject, handles);
-            end
             return;
         end
 
@@ -337,9 +335,6 @@ function move_point_Callback(hObject, eventdata, handles)
         [X,Y, BUTTON] = myginput(1, 'crosshair');
         if(BUTTON ~= 1)
             fprintf('[TraceFP]\tExit move point\n');
-            if (points_moved)
-                guidata(hObject, handles);
-            end
             return;
         end
 
@@ -356,7 +351,8 @@ function move_point_Callback(hObject, eventdata, handles)
             delete(handles.triangles_plot);
             handles.triangles_plot = 0;
         end
-        TraceFP_render(hObject, handles);
+        TraceFP_render(hObject, handles, false);
+        handles=guidata(hObject);
         fprintf('[TraceFP]\t\tpoint moved\n');
     end
 
@@ -376,9 +372,6 @@ function remove_point_Callback(hObject, eventdata, handles)
         pind = TraceFP_select(handles);
         if(pind <= 0)
             fprintf('[TraceFP]\t\texit remove points\n');
-            if (points_removed)
-                guidata(hObject, handles);
-            end
             return;
         end
 
@@ -405,8 +398,8 @@ function remove_point_Callback(hObject, eventdata, handles)
         end
         fprintf('[TraceFP]\t\tpoint removed\n');
         points_removed=true;
-        TraceFP_render(hObject, handles);
-        
+        TraceFP_render(hObject, handles, false);
+        handles=guidata(hObject);
     end
 	
 
@@ -435,8 +428,7 @@ function open_wall_samples_ClickedCallback(hObject, eventdata, handles)
 		delete(handles.wall_samples_plot);
 		handles.wall_samples_plot = 0;
 	end
-	TraceFP_render(hObject, handles);
-    guidata(hObject, handles);
+	TraceFP_render(hObject, handles, true);
 	fprintf('[TraceFP]\t\tDONE\n.');
 
 
@@ -500,8 +492,8 @@ function update_triangle_room_Callback(hObject, eventdata, handles)
 		handles.triangles_plot = 0;
 	end
 
-	TraceFP_render(hObject, handles);
-    guidata(hObject, handles);
+	TraceFP_render(hObject, handles, false);
+    handles=guidata(hObject);
 	fprintf('[TraceFP]\t\tUpdated to %d.\n', handles.current_room);
 
 
@@ -544,8 +536,116 @@ function open_fp_ClickedCallback(hObject, eventdata, handles)
 	if(handles.triangles_plot ~= 0)
 		delete(handles.triangles_plot);
 		handles.triangles_plot = 0;
-	end
+    end    
 
-	TraceFP_render(hObject, handles);
-    guidata(hObject, handles);
+	TraceFP_render(hObject, handles, true);
 	fprintf('[TraceFP]\t\tDONE\n.');
+
+
+% --- Executes on button press in button New Rectangle.
+function new_rectangle_clicked_Callback(hObject, eventdata, handles)
+% hObject    handle to pushbutton9 (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    fprintf('[TraceFP]\tNew rectangle:  select four points...\n');
+    triangle_created = false;
+    while (true)
+        % get the point indices
+        pinds = zeros(1,3);
+        i=1;
+        while i<=3
+            pinds(i) = TraceFP_select(handles);
+            if (length(pinds) == 1 || pinds(1) <= 0)
+                fprintf(['[TraceFP]\t\tExit point selection.\n']);
+                return;
+            elseif(length(unique(pinds(1:i))) < i || any(pinds(1:i) <= 0))
+                fprintf(['[TraceFP]\t\tSelected invalid point, ', ...
+                'exiting rectangle creation.\n']);
+                return;
+            else
+                i=i+1;
+            end
+        end
+
+        % check for invalid
+        if(length(unique(pinds)) < 3 || any(pinds <= 0))
+            fprintf(['[TraceFP]\t\tFound repeated/invalid points, ', ...
+                    'discarding selection.\n']);
+            return;
+        end
+
+        % check if triangle oriented correctly
+        orient = det([ 	(handles.control_points(pinds(1),:) ...
+                    - handles.control_points(pinds(3),:)) ;
+                (handles.control_points(pinds(2),:) ...
+                    - handles.control_points(pinds(3),:)) ]);
+        if(orient < 0)
+            fprintf('[TraceFP]\t\treordering to be counterclockwise\n');
+            pinds = fliplr(pinds);
+        end
+
+        % add this triangle
+        triangle_created = true;
+        handles.triangles = [handles.triangles; pinds];
+        fprintf('[TraceFP]\t\tadded new triangle\n');
+
+        % update rendering
+        handles.room_ids = [handles.room_ids ; handles.current_room];
+        if(handles.triangles_plot ~= 0)
+            delete(handles.triangles_plot);
+            handles.triangles_plot = 0;
+        end
+        
+        new_point=TraceFP_select(handles);
+        triangle_coordinates=[handles.control_points(pinds(1),:);...
+            handles.control_points(pinds(2),:); ...
+            handles.control_points(pinds(3),:)];
+        triangle_xv=triangle_coordinates(:,1);
+        triangle_yv=triangle_coordinates(:,2);
+        if (new_point<=0 || inpolygon(handles.control_points(new_point, 1), ...
+                handles.control_points(new_point, 2), ...
+                triangle_xv, ...
+                triangle_yv))
+            fprintf(['[TraceFP]\t\tSelected invalid point, ', ...
+                'exiting rectangle creation.\n']);
+            return;
+        end
+        
+        second_pinds_and_dist=[];
+        for idx = 1:3
+            element = pinds(idx);
+            distance=sqrt((handles.control_points(element,1)- ...
+                handles.control_points(new_point,1))^2 + ...
+                (handles.control_points(element,2) - ...
+                handles.control_points(new_point,2))^2);
+            second_pinds_and_dist=[second_pinds_and_dist; element, distance];
+        end
+        second_pinds_and_dist=sortrows(second_pinds_and_dist,2);
+        second_pinds=[second_pinds_and_dist(1,1), ...
+            second_pinds_and_dist(2,1), ...
+            new_point];
+        % check if triangle oriented correctly
+        orient = det([ 	(handles.control_points(second_pinds(1),:) ...
+                    - handles.control_points(second_pinds(3),:)) ;
+                (handles.control_points(second_pinds(2),:) ...
+                    - handles.control_points(second_pinds(3),:)) ]);
+        if(orient < 0)
+            fprintf('[TraceFP]\t\treordering to be counterclockwise\n');
+            second_pinds = fliplr(second_pinds);
+        end
+        
+        % add this triangle
+        triangle_created = true;
+        handles.triangles = [handles.triangles; second_pinds];
+        fprintf('[TraceFP]\t\tadded new triangle\n');
+        % update rendering
+        handles.room_ids = [handles.room_ids ; handles.current_room];
+        if(handles.triangles_plot ~= 0)
+            delete(handles.triangles_plot);
+            handles.triangles_plot = 0;
+        end
+        
+        % render and save data
+        TraceFP_render(hObject, handles, false);
+        handles=guidata(hObject);
+    end

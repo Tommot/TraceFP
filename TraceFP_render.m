@@ -78,6 +78,5 @@ function [] = TraceFP_render(hObject, handles, resize)
         xlim(XL);
         ylim(YL);
     end
-    handles.wall_samples_plot
     guidata(hObject,handles)
 end

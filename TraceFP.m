@@ -301,7 +301,6 @@ function new_point_Callback(hObject, eventdata, handles)
             end
             points_created=true;
             % render data
-            handles.wall_samples_plot
             TraceFP_render(hObject, handles, false);
             handles=guidata(hObject);
         else
@@ -573,7 +572,7 @@ function new_rectangle_clicked_Callback(hObject, eventdata, handles)
             return;
         end
 
-        % check if triangle oriented correctly
+        % check if first triangle oriented correctly
         orient = det([ 	(handles.control_points(pinds(1),:) ...
                     - handles.control_points(pinds(3),:)) ;
                 (handles.control_points(pinds(2),:) ...
@@ -584,6 +583,9 @@ function new_rectangle_clicked_Callback(hObject, eventdata, handles)
         end
         
         new_point=TraceFP_select(handles);
+        
+        % check whether new_point is inside triangle created by 
+        % first 3 points
         triangle_coordinates=[handles.control_points(pinds(1),:);...
             handles.control_points(pinds(2),:); ...
             handles.control_points(pinds(3),:)];
@@ -593,25 +595,50 @@ function new_rectangle_clicked_Callback(hObject, eventdata, handles)
                 handles.control_points(new_point, 2), ...
                 triangle_xv, ...
                 triangle_yv))
-            fprintf(['[TraceFP]\t\tSelected invalid point, ', ...
-                'exiting rectangle creation.\n']);
-            return;
+            % add the triangle
+            rectangle_created = true;
+            handles.triangles = [handles.triangles; pinds];
+            fprintf('[TraceFP]\t\tadded new triangle\n');
+            handles.room_ids = [handles.room_ids ; handles.current_room];
+            % render and save data
+            TraceFP_render(hObject, handles, false);
+            handles=guidata(hObject);
+            continue;
         end
         
-        second_pinds_and_dist=[];
-        for idx = 1:3
-            element = pinds(idx);
-            distance=sqrt((handles.control_points(element,1)- ...
-                handles.control_points(new_point,1))^2 + ...
-                (handles.control_points(element,2) - ...
-                handles.control_points(new_point,2))^2);
-            second_pinds_and_dist=[second_pinds_and_dist; element, distance];
+        % find second triangle
+        second_pinds=[];
+        i=1;
+        x=handles.control_points(new_point, 1);
+        y=handles.control_points(new_point, 2);
+        triangle_line_x = [handles.control_points(pinds(1), 1), ...
+                handles.control_points(pinds(2), 1), ...
+                handles.control_points(pinds(3), 1), ...
+                handles.control_points(pinds(1), 1)];
+        triangle_line_y = [handles.control_points(pinds(1), 2), ...
+            handles.control_points(pinds(2), 2), ...
+            handles.control_points(pinds(3), 2), ...
+            handles.control_points(pinds(1), 2)];
+        while (i<4 && numel(second_pinds) ~= 2)
+            % if there is no intersection, i.e. xi is empty
+            % this target is a correct point
+            xV=[x, handles.control_points(pinds(i), 1)];
+            yV=[y, handles.control_points(pinds(i), 2)];
+            [xi, yi] = polyxpoly(xV, yV, ...
+                triangle_line_x, triangle_line_y, 'unique');
+            if (numel(xi)==1)
+                second_pinds=[second_pinds, pinds(i)];
+            end
+            i = i + 1;
         end
-        second_pinds_and_dist=sortrows(second_pinds_and_dist,2);
-        second_pinds=[second_pinds_and_dist(1,1), ...
-            second_pinds_and_dist(2,1), ...
-            new_point];
-        % check if triangle oriented correctly
+        if (numel(second_pinds) ~= 2)
+            fprintf('[TraceFP]\t\tinvalid rectangle selected. exiting.\n');
+            return;
+        else
+            second_pinds=[second_pinds, new_point];
+        end        
+        
+        % check if second triangle oriented correctly
         orient = det([ 	(handles.control_points(second_pinds(1),:) ...
                     - handles.control_points(second_pinds(3),:)) ;
                 (handles.control_points(second_pinds(2),:) ...

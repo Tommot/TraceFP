@@ -32,7 +32,7 @@ function [] = TraceFP_render(hObject, handles, resize)
     %-------------
 	% Wall samples 
 	%-------------
-
+    hold on;
 	% check if wall samples have a handle.  if not, render them
 	if(~isempty(handles.wall_samples))
 
@@ -45,11 +45,13 @@ function [] = TraceFP_render(hObject, handles, resize)
 		Y = handles.wall_samples.pos(2,:);
 		handles.wall_samples_plot = plot(X, Y, 'b.');
     end
-
+    hold on;
 	% render triangles, if toggled
-	if(handles.triangles_plot == 0 && ~isempty(handles.triangles))
-		
+	if(~isempty(handles.triangles))
 		% get coordinates for every triangle
+        if (handles.triangles_plot~=0)
+            delete(handles.triangles_plot);
+        end
 		N = size(handles.triangles, 1);
 		X = zeros(3, N);
 		Y = zeros(size(X));
@@ -76,5 +78,6 @@ function [] = TraceFP_render(hObject, handles, resize)
         xlim(XL);
         ylim(YL);
     end
+    handles.wall_samples_plot
     guidata(hObject,handles)
 end

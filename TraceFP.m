@@ -286,7 +286,6 @@ function new_point_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 	% get new point
-    handles=guidata(hObject);
     fprintf('[TraceFP]\tnew point...\n');
     points_created=false;
     while (true)
@@ -304,6 +303,7 @@ function new_point_Callback(hObject, eventdata, handles)
             % render data
             handles.wall_samples_plot
             TraceFP_render(hObject, handles, false);
+            handles=guidata(hObject);
         else
             fprintf('[TraceFP]\texit create new point\n');
             return;
@@ -493,7 +493,6 @@ function update_triangle_room_Callback(hObject, eventdata, handles)
 	end
 
 	TraceFP_render(hObject, handles, false);
-    handles=guidata(hObject);
 	fprintf('[TraceFP]\t\tUpdated to %d.\n', handles.current_room);
 
 
@@ -548,7 +547,7 @@ function new_rectangle_clicked_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     fprintf('[TraceFP]\tNew rectangle:  select four points...\n');
-    triangle_created = false;
+    rectangle_created = false;
     while (true)
         % get the point indices
         pinds = zeros(1,3);
@@ -582,18 +581,6 @@ function new_rectangle_clicked_Callback(hObject, eventdata, handles)
         if(orient < 0)
             fprintf('[TraceFP]\t\treordering to be counterclockwise\n');
             pinds = fliplr(pinds);
-        end
-
-        % add this triangle
-        triangle_created = true;
-        handles.triangles = [handles.triangles; pinds];
-        fprintf('[TraceFP]\t\tadded new triangle\n');
-
-        % update rendering
-        handles.room_ids = [handles.room_ids ; handles.current_room];
-        if(handles.triangles_plot ~= 0)
-            delete(handles.triangles_plot);
-            handles.triangles_plot = 0;
         end
         
         new_point=TraceFP_select(handles);
@@ -634,11 +621,15 @@ function new_rectangle_clicked_Callback(hObject, eventdata, handles)
             second_pinds = fliplr(second_pinds);
         end
         
-        % add this triangle
-        triangle_created = true;
+        % add first triangle
+        rectangle_created = true;
+        handles.triangles = [handles.triangles; pinds];
+        fprintf('[TraceFP]\t\tadded new triangle\n');
+        handles.room_ids = [handles.room_ids ; handles.current_room];
+        
+        % add second triangle
         handles.triangles = [handles.triangles; second_pinds];
         fprintf('[TraceFP]\t\tadded new triangle\n');
-        % update rendering
         handles.room_ids = [handles.room_ids ; handles.current_room];
         if(handles.triangles_plot ~= 0)
             delete(handles.triangles_plot);

@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 03-Mar-2015 19:17:07
+% Last Modified by GUIDE v2.5 05-Mar-2015 22:22:15
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -76,7 +76,54 @@ function TraceFP_OpeningFcn(hObject, eventdata, handles, varargin)
 
 	% UIWAIT makes TraceFP wait for user response (see UIRESUME)
 	%uiwait(handles.figure1);
-
+    
+    [a,map]=imread('img/dot.jpg');
+    [r,c,d]=size(a); 
+    x=ceil(r/30); 
+    y=ceil(c/30); 
+    g=a(1:x:end,1:y:end,:);
+    g(g==255)=5.5*255;
+    set(handles.new_point,'CData',g);
+    
+    [a,map]=imread('img/move_point.jpg');
+    [r,c,d]=size(a); 
+    x=ceil(r/30); 
+    y=ceil(c/30); 
+    g=a(1:x:end,1:y:end,:);
+    g(g==255)=5.5*255;
+    set(handles.move_point,'CData',g);
+    
+    [a,map]=imread('img/remove_point.jpg');
+    [r,c,d]=size(a); 
+    x=ceil(r/30); 
+    y=ceil(c/30); 
+    g=a(1:x:end,1:y:end,:);
+    g(g==255)=5.5*255;
+    set(handles.remove_point,'CData',g);
+    
+    [a,map]=imread('img/new_triangle.jpg');
+    [r,c,d]=size(a); 
+    x=ceil(r/30); 
+    y=ceil(c/30); 
+    g=a(1:x:end,1:y:end,:);
+    g(g==255)=5.5*255;
+    set(handles.new_triangle,'CData',g);
+    
+    [a,map]=imread('img/remove_triangle.jpg');
+    [r,c,d]=size(a); 
+    x=ceil(r/30); 
+    y=ceil(c/30); 
+    g=a(1:x:end,1:y:end,:);
+    g(g==255)=5.5*255;
+    set(handles.remove_triangle,'CData',g);
+    
+    [a,map]=imread('img/new_rectangle.jpg');
+    [r,c,d]=size(a); 
+    x=ceil(r/30); 
+    y=ceil(c/30); 
+    g=a(1:x:end,1:y:end,:);
+    g(g==255)=5.5*255;
+    set(handles.new_rectangle,'CData',g);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = TraceFP_OutputFcn(hObject, eventdata, handles) 
@@ -144,9 +191,9 @@ function show_floorplan_Callback(hObject, eventdata, handles)
 	end
 
 
-% --- Executes on button press in new_polygon.
+% --- Executes on button press in new_triangle.
 function new_triangle_Callback(hObject, eventdata, handles)
-% hObject    handle to new_polygon (see GCBO)
+% hObject    handle to new_triangle (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -209,9 +256,9 @@ function new_triangle_Callback(hObject, eventdata, handles)
 
 
 
-% --- Executes on button press in remove_polygon.
-function remove_polygon_Callback(hObject, eventdata, handles)
-% hObject    handle to remove_polygon (see GCBO)
+% --- Executes on button press in remove_triangle.
+function remove_triangle_Callback(hObject, eventdata, handles)
+% hObject    handle to remove_triangle (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -542,7 +589,7 @@ function open_fp_ClickedCallback(hObject, eventdata, handles)
 
 % --- Executes on button press in button New Rectangle.
 function new_rectangle_clicked_Callback(hObject, eventdata, handles)
-% hObject    handle to pushbutton9 (see GCBO)
+% hObject    handle to new_rectangle (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     fprintf('[TraceFP]\tNew rectangle:  select four points...\n');

@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 12-Mar-2015 19:08:52
+% Last Modified by GUIDE v2.5 12-Mar-2015 19:38:48
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -73,10 +73,9 @@ function TraceFP_OpeningFcn(hObject, eventdata, handles, varargin)
 
 	% Update handles structure
 	guidata(hObject, handles);
-    global undo_history;
+    global undo_history redo_history
     undo_history = TraceFP_history(handles);
-    global redo_history;
-    undo_history = TraceFP_history(handles);
+    redo_history = TraceFP_history();
 
 	% UIWAIT makes TraceFP wait for user response (see UIRESUME)
 	%uiwait(handles.figure1);
@@ -260,7 +259,7 @@ function new_triangle_Callback(hObject, eventdata, handles)
         % render and save data
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
-        global undo_history;
+        global undo_history
         undo_history.push_back(handles);
     end
 
@@ -292,7 +291,7 @@ function remove_triangle_Callback(hObject, eventdata, handles)
         % render and save data
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
-        global undo_history;
+        global undo_history
         undo_history.push_back(handles);
     end
 
@@ -352,7 +351,7 @@ function new_point_Callback(hObject, eventdata, handles)
             % render data
             TraceFP_render(hObject, handles, false);
             handles=guidata(hObject);
-            global undo_history;
+            global undo_history
             undo_history.push_back(handles);
         else
             fprintf('[TraceFP]\texit create new point\n');
@@ -394,7 +393,7 @@ function move_point_Callback(hObject, eventdata, handles)
         
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
-        global undo_history;
+        global undo_history
         undo_history.push_back(handles);
         fprintf('[TraceFP]\t\tpoint moved\n');
     end
@@ -434,7 +433,7 @@ function remove_point_Callback(hObject, eventdata, handles)
         points_removed=true;
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
-        global undo_history;
+        global undo_history
         undo_history.push_back(handles);
     end
 	
@@ -461,7 +460,7 @@ function open_wall_samples_ClickedCallback(hObject, eventdata, handles)
 
 	TraceFP_render(hObject, handles, true);
     handles=guidata(hObject);
-    global undo_history;
+    global undo_history
     undo_history.push_back(handles);
 	fprintf('[TraceFP]\t\tDONE\n.');
 
@@ -522,7 +521,7 @@ function update_triangle_room_Callback(hObject, eventdata, handles)
 
 	TraceFP_render(hObject, handles, false);
     handles=guidata(hObject);
-    global undo_history;
+    global undo_history
     undo_history.push_back(handles);
 	fprintf('[TraceFP]\t\tUpdated to %d.\n', handles.current_room);
 
@@ -560,7 +559,7 @@ function open_fp_ClickedCallback(hObject, eventdata, handles)
 
 	TraceFP_render(hObject, handles, true);
     handles=guidata(hObject);
-    global undo_history;
+    global undo_history
     undo_history.push_back(handles);
 	fprintf('[TraceFP]\t\tDONE\n.');
 
@@ -628,7 +627,7 @@ function new_rectangle_clicked_Callback(hObject, eventdata, handles)
             % render and save data
             TraceFP_render(hObject, handles, false);
             handles=guidata(hObject);
-            global undo_history;
+            global undo_history
             undo_history.push_back(handles);
             continue;
         end
@@ -689,7 +688,7 @@ function new_rectangle_clicked_Callback(hObject, eventdata, handles)
         % render and save data
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
-        global undo_history;
+        global undo_history
         undo_history.push_back(handles);
     end
 
@@ -709,7 +708,7 @@ function clear_Callback(hObject, eventdata, handles)
 	handles.current_room = 1;
     TraceFP_render(hObject, handles, false);
     handles=guidata(hObject);
-    global undo_history;
+    global undo_history
     delete(undo_history);
     undo_history = TraceFP_history(handles);
 
@@ -755,15 +754,36 @@ function fit_to_line_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function undo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to undo (see GCBO)
+% hObject    handle to redo (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    global undo_history;
+    global redo_history undo_history 
     node = undo_history.pop();
+    if (node ~= 0)
+        redo_history.push_back(node);
+    end
     if (undo_history.tail==0)
         return;
     end
     undo_history.tail
+    handles.control_points = undo_history.tail.control_points;
+    handles.triangles = undo_history.tail.triangles;
+    handles.wall_samples = undo_history.tail.wall_samples;
+    delete(node);
+    TraceFP_render(hObject, handles, false);
+
+
+% --------------------------------------------------------------------
+function redo_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to redo (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    global redo_history undo_history
+    node = redo_history.pop();
+    if (node==0)
+        return;
+    end
+    undo_history.push_back(node);
     handles.control_points = undo_history.tail.control_points;
     handles.triangles = undo_history.tail.triangles;
     handles.wall_samples = undo_history.tail.wall_samples;

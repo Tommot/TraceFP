@@ -10,6 +10,8 @@ classdef TraceFP_history < handle
         function obj = TraceFP_history(handles)
             if nargin > 0
                 obj.tail = TraceFP_history_node(handles);
+            else
+                obj.tail = 0;
             end
         end
         
@@ -25,7 +27,10 @@ classdef TraceFP_history < handle
         end
         
         function obj = pop(self)
-            if (self.tail.prev == 0)
+            if (self.tail == 0)
+                obj = 0;
+                return
+            elseif (self.tail.prev == 0)
                 obj = self.tail;
                 self.tail = 0;
             else

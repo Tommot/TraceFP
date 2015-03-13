@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 12-Mar-2015 19:38:48
+% Last Modified by GUIDE v2.5 12-Mar-2015 20:18:38
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -722,48 +722,9 @@ function clear_Callback(hObject, eventdata, handles)
     undo_history = TraceFP_history(handles);
 
 
-% --- Executes on button press in fit_to_line.
-function fit_to_line_Callback(hObject, eventdata, handles)
-% hObject    handle to fit_to_line (see GCBO)
-% eventdata  reserved - to be defined in a future version of MATLAB
-% handles    structure with handles and user data (see GUIDATA)
-    points = [];
-    points_moved = false;
-    % tell user what's going on
-	fprintf('[TraceFP]\tselect points to fit into one line...\n');
-	% use selection tool to find a point
-    while (true)
-        fprintf('[TraceFP]\t\tSelect new point\n');
-        pind = 1;
-        while (pind > 0)
-            pind = TraceFP_select(handles);
-            if(pind <= 0)
-                break;
-            else
-                points = [points, pind];
-            end
-        end
-        
-        points_coordinates = zeros(0,2);
-        
-        for i=1:numel(points)
-            points_coordinates = [points_coordinates; handles.control_points(pind, :)];
-        end
-        
-        
-
-        % set point to that location
-        handles.control_points(pind, :) = [X, Y];
-
-        TraceFP_render(hObject, handles, false);
-        handles=guidata(hObject);
-        fprintf('[TraceFP]\t\tpoint moved\n');
-    end
-
-
 % --------------------------------------------------------------------
 function undo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to redo (see GCBO)
+% hObject    handle to fit_to_line (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history 
@@ -783,7 +744,7 @@ function undo_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function redo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to redo (see GCBO)
+% hObject    handle to fit_to_line (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history
@@ -797,3 +758,44 @@ function redo_ClickedCallback(hObject, eventdata, handles)
     handles.wall_samples = undo_history.tail.wall_samples;
     delete(node);
     TraceFP_render(hObject, handles, false);
+
+
+% --------------------------------------------------------------------
+function fit_to_line_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to fit_to_line (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    while (true)
+        points = [];
+        fprintf('[TraceFP]\tselect points to fit into one line...\n');
+        fprintf('[TraceFP]\t\tSelect new point\n');
+        pind = 1;
+        while (pind > 0)
+            pind = TraceFP_select(handles);
+            if(pind <= 0)
+                break;
+            else
+                points = [points, pind];
+            end
+        end
+
+        if (numel(points)==0)
+            fprintf('[TraceFP]\t\tExiting line fitting.\n');
+            return;
+        end
+        % retrieves coordinates of points
+        points_coordinates = zeros(0,2);
+        for i=1:numel(points)
+            points_coordinates = [points_coordinates; handles.control_points(points(i), :)];
+        end
+        P = polyfit(points_coordinates(:,1),points_coordinates(:,2),1)
+        for i=1:numel(points)
+           new_coordinate = projectPointToLine(points_coordinates(i, :), P);
+           handles.control_points(points(i), :) = new_coordinate;
+        end
+        TraceFP_render(hObject, handles, false);
+        handles=guidata(hObject);
+        global undo_history
+        undo_history.push_back(handles);
+        fprintf('[TraceFP]\t\tpoints fit to line\n');
+    end

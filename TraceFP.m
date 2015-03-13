@@ -698,6 +698,13 @@ function clear_Callback(hObject, eventdata, handles)
 % hObject    handle to clear (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+    answer = questdlg(['All current points, triangles, labels will be removed. ', ...
+			'Unsaved data will be lost. ', ...
+            'Do you still want to proceed?'], 'Clear');
+    if(~strcmp(answer, 'Yes'))
+        fprintf('[TraceFP]\t\tCancelling clear...\n');
+        return;
+    end
     % initialize handles structure
 	handles.wall_samples = []; % no wall samples yet
 	handles.control_points = zeros(0,2); 
@@ -708,8 +715,10 @@ function clear_Callback(hObject, eventdata, handles)
 	handles.current_room = 1;
     TraceFP_render(hObject, handles, false);
     handles=guidata(hObject);
-    global undo_history
+    global undo_history redo_history
     delete(undo_history);
+    delete(redo_history);
+    redo_history = TraceFP_history();
     undo_history = TraceFP_history(handles);
 
 
@@ -765,7 +774,6 @@ function undo_ClickedCallback(hObject, eventdata, handles)
     if (undo_history.tail==0)
         return;
     end
-    undo_history.tail
     handles.control_points = undo_history.tail.control_points;
     handles.triangles = undo_history.tail.triangles;
     handles.wall_samples = undo_history.tail.wall_samples;

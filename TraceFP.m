@@ -788,7 +788,7 @@ function fit_to_line_ClickedCallback(hObject, eventdata, handles)
         for i=1:numel(points)
             points_coordinates = [points_coordinates; handles.control_points(points(i), :)];
         end
-        P = polyfit(points_coordinates(:,1),points_coordinates(:,2),1)
+        P = polyfit(points_coordinates(:,1),points_coordinates(:,2),1);
         for i=1:numel(points)
            new_coordinate = projectPointToLine(points_coordinates(i, :), P);
            handles.control_points(points(i), :) = new_coordinate;

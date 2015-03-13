@@ -506,28 +506,28 @@ function update_triangle_room_Callback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     
-    % best rendering efficient code (for swift debugging)
-    fprintf('[TraceFP]\tUpdate triangle room...\n');
-    change = false;
-	while (true)
-        % find a triangle
-        ind = TraceFP_findtri(handles);
-        if(ind <= 0)
-            fprintf('[TraceFP]\t\tNo triangle selected.  Exiting.\n');
-            if (change)
-                TraceFP_render(hObject, handles, false);
-                handles=guidata(hObject);
-                global undo_history
-                undo_history.push_back(handles);
-                fprintf('[TraceFP]\t\tUpdated to %d.\n', handles.current_room);
-            end
-            return;
-        end
-
-        % change its room to current
-        change = true;
-        handles.room_ids(ind) = handles.current_room;
-    end
+%     % best rendering efficient code (for swift debugging)
+%     fprintf('[TraceFP]\tUpdate triangle room...\n');
+%     change = false;
+% 	while (true)
+%         % find a triangle
+%         ind = TraceFP_findtri(handles);
+%         if(ind <= 0)
+%             fprintf('[TraceFP]\t\tNo triangle selected.  Exiting.\n');
+%             if (change)
+%                 TraceFP_render(hObject, handles, false);
+%                 handles=guidata(hObject);
+%                 global undo_history
+%                 undo_history.push_back(handles);
+%                 fprintf('[TraceFP]\t\tUpdated to %d.\n', handles.current_room);
+%             end
+%             return;
+%         end
+% 
+%         % change its room to current
+%         change = true;
+%         handles.room_ids(ind) = handles.current_room;
+%     end
 
     % best responsiveness code
 	fprintf('[TraceFP]\tUpdate triangle room...\n');

@@ -457,7 +457,7 @@ function open_wall_samples_ClickedCallback(hObject, eventdata, handles)
 	fprintf('[TraceFP]\t\tloading (this may take a while)...\n');
 	handles.wall_samples = readMapData(fullfile([pathname, dqfile]));
 
-	TraceFP_render(hObject, handles, true);
+	TraceFP_render(hObject, handles, false);
     handles=guidata(hObject);
     global undo_history
     undo_history.push_back(handles);

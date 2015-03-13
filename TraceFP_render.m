@@ -53,6 +53,13 @@ function [] = TraceFP_render(hObject, handles, resize)
 			plot(handles.control_points(:,1), ...
 				handles.control_points(:,2), ...
 					'*m', 'LineWidth', 2);
+                
+        % hide control points if 'show control points' box unchecked
+        if(get(handles.show_control_points, 'Value'))
+            set(handles.control_points_plot, 'Visible', 'on');
+        else
+            set(handles.control_points_plot, 'Visible', 'off');
+        end
     end
     
     %-------------
@@ -70,7 +77,18 @@ function [] = TraceFP_render(hObject, handles, resize)
 		X = handles.wall_samples.pos(1,:);
 		Y = handles.wall_samples.pos(2,:);
 		handles.wall_samples_plot = plot(X, Y, 'b.');
+        
+        % hide wall samples if 'show wall samples' box unchecked
+        if(get(handles.show_wall_samples, 'Value'))
+            set(handles.wall_samples_plot, 'Visible', 'on');
+        else
+            set(handles.wall_samples_plot, 'Visible', 'off');
+        end
     end
+    
+    %------------
+    % Triangles
+    %------------
     hold on;
 	% render triangles, if toggled
 	if(~isempty(handles.triangles))
@@ -99,7 +117,17 @@ function [] = TraceFP_render(hObject, handles, resize)
 
 		% plot the triangles
 		handles.triangles_plot = patch(X, Y, C, 'EdgeAlpha', 0.2);
+        
+        % hide triangles if 'show triangles' box unchecked
+        if(get(handles.show_floorplan, 'Value'))
+            set(handles.triangles_plot, 'Visible', 'on');
+        else
+            set(handles.triangles_plot, 'Visible', 'off');
+        end
     end
+    
+    
+    
     if (~resize)
         xlim(XL);
         ylim(YL);

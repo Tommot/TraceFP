@@ -15,14 +15,40 @@ function [] = TraceFP_render(hObject, handles, resize)
     XL=xlim;
     YL=ylim;
 	hold off;
+    
+    % ------------------------------------------------------------
+    % special case where nothing is supposed to appear on screen
+    % clear / undo to empty screen
+    % ------------------------------------------------------------
+    if (isempty(handles.wall_samples) && isempty(handles.control_points) ...
+            && isempty(handles.triangles))
+        if (handles.control_points_plot~=0)
+            delete(handles.control_points_plot);
+        end
+        if (handles.triangles_plot~=0)
+            delete(handles.triangles_plot);
+        end
+        if (handles.wall_samples_plot~=0)
+            delete(handles.wall_samples_plot);
+        end
+        cla;
+        if (~resize)
+            xlim(XL);
+            ylim(YL);
+        end
+        guidata(hObject,handles)
+        return;
+    end
 
 	% --------------
 	% Control points
 	% --------------
-
+    
 	% render any control points, if toggled
-	if(handles.control_points_plot == 0 ...
-				&& ~isempty(handles.control_points))
+	if(~isempty(handles.control_points))
+        if (handles.control_points_plot ~= 0)
+            delete(handles.control_points_plot);
+        end
 		handles.control_points_plot = ...
 			plot(handles.control_points(:,1), ...
 				handles.control_points(:,2), ...

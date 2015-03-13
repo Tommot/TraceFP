@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 06-Mar-2015 18:59:55
+% Last Modified by GUIDE v2.5 12-Mar-2015 19:08:52
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -73,6 +73,10 @@ function TraceFP_OpeningFcn(hObject, eventdata, handles, varargin)
 
 	% Update handles structure
 	guidata(hObject, handles);
+    global undo_history;
+    undo_history = TraceFP_history(handles);
+    global redo_history;
+    undo_history = TraceFP_history(handles);
 
 	% UIWAIT makes TraceFP wait for user response (see UIRESUME)
 	%uiwait(handles.figure1);
@@ -252,14 +256,12 @@ function new_triangle_Callback(hObject, eventdata, handles)
 
         % update rendering
         handles.room_ids = [handles.room_ids ; handles.current_room];
-        if(handles.triangles_plot ~= 0)
-            delete(handles.triangles_plot);
-            handles.triangles_plot = 0;
-        end
 
         % render and save data
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
+        global undo_history;
+        undo_history.push_back(handles);
     end
 
 
@@ -287,15 +289,11 @@ function remove_triangle_Callback(hObject, eventdata, handles)
         handles.room_ids(ind) = [];
         triangles_removed=true;
 
-        % update rendering
-        if(handles.triangles_plot ~= 0)
-            delete(handles.triangles_plot);
-            handles.triangles_plot = 0;
-        end
-
         % render and save data
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
+        global undo_history;
+        undo_history.push_back(handles);
     end
 
 
@@ -350,14 +348,12 @@ function new_point_Callback(hObject, eventdata, handles)
 
             % add to figure
             handles.control_points = [handles.control_points; X Y];
-            if(handles.control_points_plot ~= 0)
-                delete(handles.control_points_plot);
-                handles.control_points_plot = 0;
-            end
             points_created=true;
             % render data
             TraceFP_render(hObject, handles, false);
             handles=guidata(hObject);
+            global undo_history;
+            undo_history.push_back(handles);
         else
             fprintf('[TraceFP]\texit create new point\n');
             return;
@@ -395,18 +391,11 @@ function move_point_Callback(hObject, eventdata, handles)
         % set point to that location
         handles.control_points(pind, :) = [X, Y];
         points_moved=true;
-
-        % redraw
-        if(handles.control_points_plot ~= 0)
-            delete(handles.control_points_plot);
-            handles.control_points_plot = 0;
-        end
-        if(any(handles.triangles(:) == pind) && handles.triangles_plot ~= 0)
-            delete(handles.triangles_plot);
-            handles.triangles_plot = 0;
-        end
+        
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
+        global undo_history;
+        undo_history.push_back(handles);
         fprintf('[TraceFP]\t\tpoint moved\n');
     end
 
@@ -441,19 +430,12 @@ function remove_point_Callback(hObject, eventdata, handles)
         % remove this point from our list of points
         handles.control_points(pind, :) = [];
 
-        % redraw
-        if(handles.control_points_plot ~= 0)
-            delete(handles.control_points_plot);
-            handles.control_points_plot = 0;
-        end
-        if( sum(to_remove) > 0 && handles.triangles_plot ~= 0)
-            delete(handles.triangles_plot);
-            handles.triangles_plot = 0;
-        end
         fprintf('[TraceFP]\t\tpoint removed\n');
         points_removed=true;
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
+        global undo_history;
+        undo_history.push_back(handles);
     end
 	
 
@@ -477,12 +459,10 @@ function open_wall_samples_ClickedCallback(hObject, eventdata, handles)
 	fprintf('[TraceFP]\t\tloading (this may take a while)...\n');
 	handles.wall_samples = readMapData(fullfile([pathname, dqfile]));
 
-	% render it
-	if(handles.wall_samples_plot ~= 0)
-		delete(handles.wall_samples_plot);
-		handles.wall_samples_plot = 0;
-	end
 	TraceFP_render(hObject, handles, true);
+    handles=guidata(hObject);
+    global undo_history;
+    undo_history.push_back(handles);
 	fprintf('[TraceFP]\t\tDONE\n.');
 
 
@@ -540,13 +520,10 @@ function update_triangle_room_Callback(hObject, eventdata, handles)
 	% change its room to current
 	handles.room_ids(ind) = handles.current_room;
 
-	% update
-	if(handles.triangles_plot ~= 0)
-		delete(handles.triangles_plot);
-		handles.triangles_plot = 0;
-	end
-
 	TraceFP_render(hObject, handles, false);
+    handles=guidata(hObject);
+    global undo_history;
+    undo_history.push_back(handles);
 	fprintf('[TraceFP]\t\tUpdated to %d.\n', handles.current_room);
 
 
@@ -581,17 +558,10 @@ function open_fp_ClickedCallback(hObject, eventdata, handles)
 	handles.room_ids       = fp.room_inds;
 	handles.current_room   = 1;
 
-	% render it
-	if(handles.control_points_plot ~= 0)
-		delete(handles.control_points_plot);
-		handles.control_points_plot = 0;
-	end
-	if(handles.triangles_plot ~= 0)
-		delete(handles.triangles_plot);
-		handles.triangles_plot = 0;
-    end    
-
 	TraceFP_render(hObject, handles, true);
+    handles=guidata(hObject);
+    global undo_history;
+    undo_history.push_back(handles);
 	fprintf('[TraceFP]\t\tDONE\n.');
 
 
@@ -658,6 +628,8 @@ function new_rectangle_clicked_Callback(hObject, eventdata, handles)
             % render and save data
             TraceFP_render(hObject, handles, false);
             handles=guidata(hObject);
+            global undo_history;
+            undo_history.push_back(handles);
             continue;
         end
         
@@ -713,14 +685,12 @@ function new_rectangle_clicked_Callback(hObject, eventdata, handles)
         handles.triangles = [handles.triangles; second_pinds];
         fprintf('[TraceFP]\t\tadded new triangle\n');
         handles.room_ids = [handles.room_ids ; handles.current_room];
-        if(handles.triangles_plot ~= 0)
-            delete(handles.triangles_plot);
-            handles.triangles_plot = 0;
-        end
-        
+
         % render and save data
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
+        global undo_history;
+        undo_history.push_back(handles);
     end
 
 
@@ -729,18 +699,6 @@ function clear_Callback(hObject, eventdata, handles)
 % hObject    handle to clear (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    if (handles.triangles_plot ~= 0)
-        delete(handles.triangles_plot);
-        handles.triangles_plot = 0;
-    end
-    if (handles.control_points_plot~=0)
-        delete(handles.control_points_plot);
-        handles.control_points_plot = 0;
-    end
-    if (handles.wall_samples_plot ~= 0)
-        delete(handles.wall_samples_plot);
-        handles.wall_samples_plot = 0;
-    end
     % initialize handles structure
 	handles.wall_samples = []; % no wall samples yet
 	handles.control_points = zeros(0,2); 
@@ -750,6 +708,10 @@ function clear_Callback(hObject, eventdata, handles)
 	handles.room_ids     = []; % one per triangle
 	handles.current_room = 1;
     TraceFP_render(hObject, handles, false);
+    handles=guidata(hObject);
+    global undo_history;
+    delete(undo_history);
+    undo_history = TraceFP_history(handles);
 
 
 % --- Executes on button press in fit_to_line.
@@ -776,7 +738,7 @@ function fit_to_line_Callback(hObject, eventdata, handles)
         
         points_coordinates = zeros(0,2);
         
-        for i=1...numel(points)
+        for i=1:numel(points)
             points_coordinates = [points_coordinates; handles.control_points(pind, :)];
         end
         
@@ -785,16 +747,25 @@ function fit_to_line_Callback(hObject, eventdata, handles)
         % set point to that location
         handles.control_points(pind, :) = [X, Y];
 
-        % redraw
-        if(handles.control_points_plot ~= 0)
-            delete(handles.control_points_plot);
-            handles.control_points_plot = 0;
-        end
-        if(any(handles.triangles(:) == pind) && handles.triangles_plot ~= 0)
-            delete(handles.triangles_plot);
-            handles.triangles_plot = 0;
-        end
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
         fprintf('[TraceFP]\t\tpoint moved\n');
     end
+
+
+% --------------------------------------------------------------------
+function undo_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to undo (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    global undo_history;
+    node = undo_history.pop();
+    if (undo_history.tail==0)
+        return;
+    end
+    undo_history.tail
+    handles.control_points = undo_history.tail.control_points;
+    handles.triangles = undo_history.tail.triangles;
+    handles.wall_samples = undo_history.tail.wall_samples;
+    delete(node);
+    TraceFP_render(hObject, handles, false);

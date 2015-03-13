@@ -43,9 +43,6 @@ function ind = TraceFP_select(handles)
 		ind = 0;
         return;
 	elseif(numel(ind) > 1)
-		
-        % the end of the cell array usually contains good entries
-        % compared to the beginning of the cell array
         found=0;
         for i=numel(ind):-1:1
             if (numel(ind{i}) == 1)

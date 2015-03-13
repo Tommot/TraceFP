@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 05-Mar-2015 22:22:15
+% Last Modified by GUIDE v2.5 06-Mar-2015 18:59:55
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -124,6 +124,14 @@ function TraceFP_OpeningFcn(hObject, eventdata, handles, varargin)
     g=a(1:x:end,1:y:end,:);
     g(g==255)=5.5*255;
     set(handles.new_rectangle,'CData',g);
+    
+    [a,map]=imread('img/cross.png');
+    [r,c,d]=size(a); 
+    x=ceil(r/30); 
+    y=ceil(c/30); 
+    g=a(1:x:end,1:y:end,:);
+    g(g==255)=5.5*255;
+    set(handles.clear,'CData',g);
 
 % --- Outputs from this function are returned to the command line.
 function varargout = TraceFP_OutputFcn(hObject, eventdata, handles) 
@@ -713,4 +721,80 @@ function new_rectangle_clicked_Callback(hObject, eventdata, handles)
         % render and save data
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
+    end
+
+
+% --- Executes on button press in clear.
+function clear_Callback(hObject, eventdata, handles)
+% hObject    handle to clear (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    if (handles.triangles_plot ~= 0)
+        delete(handles.triangles_plot);
+        handles.triangles_plot = 0;
+    end
+    if (handles.control_points_plot~=0)
+        delete(handles.control_points_plot);
+        handles.control_points_plot = 0;
+    end
+    if (handles.wall_samples_plot ~= 0)
+        delete(handles.wall_samples_plot);
+        handles.wall_samples_plot = 0;
+    end
+    % initialize handles structure
+	handles.wall_samples = []; % no wall samples yet
+	handles.control_points = zeros(0,2); 
+			% no control points (each row (x,y))
+	handles.triangles = zeros(0,3); 
+			% no polygons yet, each indexes 3 ctrl pts
+	handles.room_ids     = []; % one per triangle
+	handles.current_room = 1;
+    TraceFP_render(hObject, handles, false);
+
+
+% --- Executes on button press in fit_to_line.
+function fit_to_line_Callback(hObject, eventdata, handles)
+% hObject    handle to fit_to_line (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    points = [];
+    points_moved = false;
+    % tell user what's going on
+	fprintf('[TraceFP]\tselect points to fit into one line...\n');
+	% use selection tool to find a point
+    while (true)
+        fprintf('[TraceFP]\t\tSelect new point\n');
+        pind = 1;
+        while (pind > 0)
+            pind = TraceFP_select(handles);
+            if(pind <= 0)
+                break;
+            else
+                points = [points, pind];
+            end
+        end
+        
+        points_coordinates = zeros(0,2);
+        
+        for i=1...numel(points)
+            points_coordinates = [points_coordinates; handles.control_points(pind, :)];
+        end
+        
+        
+
+        % set point to that location
+        handles.control_points(pind, :) = [X, Y];
+
+        % redraw
+        if(handles.control_points_plot ~= 0)
+            delete(handles.control_points_plot);
+            handles.control_points_plot = 0;
+        end
+        if(any(handles.triangles(:) == pind) && handles.triangles_plot ~= 0)
+            delete(handles.triangles_plot);
+            handles.triangles_plot = 0;
+        end
+        TraceFP_render(hObject, handles, false);
+        handles=guidata(hObject);
+        fprintf('[TraceFP]\t\tpoint moved\n');
     end

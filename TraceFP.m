@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 12-Mar-2015 20:18:38
+% Last Modified by GUIDE v2.5 12-Mar-2015 20:56:07
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -368,8 +368,6 @@ function move_point_Callback(hObject, eventdata, handles)
 
 	% tell user what's going on
 	fprintf('[TraceFP]\tmove point...\n');
-    points_moved=false;
-
 	% use selection tool to find a point
     while (true)
         fprintf('[TraceFP]\t\tSelect new point\n');
@@ -388,9 +386,7 @@ function move_point_Callback(hObject, eventdata, handles)
         end
 
         % set point to that location
-        handles.control_points(pind, :) = [X, Y];
-        points_moved=true;
-        
+        handles.control_points(pind, :) = [X, Y];  
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
         global undo_history
@@ -724,7 +720,7 @@ function clear_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function undo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to fit_to_line (see GCBO)
+% hObject    handle to fit_to_orthogonal_lines (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history 
@@ -744,7 +740,7 @@ function undo_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function redo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to fit_to_line (see GCBO)
+% hObject    handle to fit_to_orthogonal_lines (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history
@@ -762,7 +758,7 @@ function redo_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to fit_to_line (see GCBO)
+% hObject    handle to fit_to_orthogonal_lines (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -798,4 +794,86 @@ function fit_to_line_ClickedCallback(hObject, eventdata, handles)
         global undo_history
         undo_history.push_back(handles);
         fprintf('[TraceFP]\t\tpoints fit to line\n');
+    end
+
+
+% --------------------------------------------------------------------
+function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to fit_to_orthogonal_lines (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    while (true)
+        points = [];
+        fprintf('[TraceFP]\tselect points to fit into one line...\n');
+        fprintf('[TraceFP]\t\tSelect new point\n');
+        pind = 1;
+        while (pind > 0)
+            pind = TraceFP_select(handles);
+            if(pind <= 0)
+                break;
+            else
+                points = [points, pind];
+            end
+        end
+
+        if (numel(points)==0)
+            fprintf('[TraceFP]\t\tExiting orthogonal line fitting.\n');
+            return;
+        end
+        % retrieves coordinates of points
+        points_coordinates = zeros(0,2);
+        for i=1:numel(points)
+            points_coordinates = [points_coordinates; handles.control_points(points(i), :)];
+        end
+        P = polyfit(points_coordinates(:,1),points_coordinates(:,2),1);
+        for i=1:numel(points)
+           new_coordinate = projectPointToLine(points_coordinates(i, :), P);
+           handles.control_points(points(i), :) = new_coordinate;
+        end
+%         TraceFP_render(hObject, handles, false);
+%         handles=guidata(hObject);
+%         global undo_history
+%         undo_history.push_back(handles);
+        fprintf('[TraceFP]\t\tpoints fit to first line determined\n');
+        
+        % obtain data of the second line, points to be fitted
+        
+        points_2 = [];
+        fprintf('[TraceFP]\tselect points to fit into one line...\n');
+        fprintf('[TraceFP]\t\tSelect new point\n');
+        pind = 1;
+        while (pind > 0)
+            pind = TraceFP_select(handles);
+            if(pind <= 0)
+                break;
+            else
+                points_2 = [points_2, pind];
+            end
+        end
+
+        if (numel(points_2)==0)
+            fprintf('[TraceFP]\t\tExiting line fitting.\n');
+            return;
+        end
+        
+        fix_point_pind = points(numel(points));
+        % retrieves coordinates of points
+        points_coordinates_2 = zeros(0,2);
+        for i=1:numel(points_2)
+            points_coordinates_2 = [points_coordinates_2; handles.control_points(points_2(i), :)];
+        end
+        second_line_arg = handles.control_points(fix_point_pind, :);
+        second_line_arg = [second_line_arg; ...
+            handles.control_points(fix_point_pind, 1) + 1, ...
+            handles.control_points(fix_point_pind, 2) - 1/P(1)];
+        P = polyfit(second_line_arg(:,1),second_line_arg(:,2),1);
+        for i=1:numel(points_2)
+           new_coordinate = projectPointToLine(points_coordinates_2(i, :), P);
+           handles.control_points(points_2(i), :) = new_coordinate;
+        end
+        TraceFP_render(hObject, handles, false);
+        handles=guidata(hObject);
+        global undo_history
+        undo_history.push_back(handles);
+        fprintf('[TraceFP]\t\tpoints fit to orthogonal lines\n');
     end

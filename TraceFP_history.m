@@ -40,6 +40,14 @@ classdef TraceFP_history < handle
             end
             obj.prev = 0;
         end
+        
+        function clear(self)
+            obj = self.pop();
+            while (obj~=0)
+                delete(obj);
+                obj = self.pop();
+            end
+        end
     end
     
 end

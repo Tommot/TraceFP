@@ -261,8 +261,9 @@ function new_triangle_Callback(hObject, eventdata, handles)
         % render and save data
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
-        global undo_history
+        global undo_history redo_history
         undo_history.push_back(handles);
+        redo_history.clear();
     end
 
 
@@ -293,8 +294,9 @@ function remove_triangle_Callback(hObject, eventdata, handles)
         % render and save data
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
-        global undo_history
+        global undo_history redo_history
         undo_history.push_back(handles);
+        redo_history.clear();
     end
 
 
@@ -354,8 +356,9 @@ function new_point_Callback(hObject, eventdata, handles)
             % render data
             TraceFP_render(hObject, handles, false);
             handles=guidata(hObject);
-            global undo_history
+            global undo_history redo_history
             undo_history.push_back(handles);
+            redo_history.clear();
         else
             fprintf('[TraceFP]\texit create new point\n');
             return;
@@ -392,8 +395,9 @@ function move_point_Callback(hObject, eventdata, handles)
         handles.control_points(pind, :) = [X, Y];  
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
-        global undo_history
+        global undo_history redo_history
         undo_history.push_back(handles);
+        redo_history.clear();
         fprintf('[TraceFP]\t\tpoint moved\n');
     end
 
@@ -432,8 +436,9 @@ function remove_point_Callback(hObject, eventdata, handles)
         points_removed=true;
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
-        global undo_history
+        global undo_history redo_history
         undo_history.push_back(handles);
+        redo_history.clear();
     end
 	
 
@@ -459,8 +464,9 @@ function open_wall_samples_ClickedCallback(hObject, eventdata, handles)
 
 	TraceFP_render(hObject, handles, false);
     handles=guidata(hObject);
-    global undo_history
+    global undo_history redo_history
     undo_history.push_back(handles);
+    redo_history.clear();
 	fprintf('[TraceFP]\t\tDONE\n.');
 
 
@@ -517,8 +523,9 @@ function update_triangle_room_Callback(hObject, eventdata, handles)
 %             if (change)
 %                 TraceFP_render(hObject, handles, false);
 %                 handles=guidata(hObject);
-%                 global undo_history
+%                 global undo_history redo_history
 %                 undo_history.push_back(handles);
+%                 redo_history.clear();
 %                 fprintf('[TraceFP]\t\tUpdated to %d.\n', handles.current_room);
 %             end
 %             return;
@@ -544,8 +551,9 @@ function update_triangle_room_Callback(hObject, eventdata, handles)
 
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
-        global undo_history
+        global undo_history redo_history
         undo_history.push_back(handles);
+        redo_history.clear();
         fprintf('[TraceFP]\t\tUpdated to %d.\n', handles.current_room);
     end
 
@@ -582,8 +590,9 @@ function open_fp_ClickedCallback(hObject, eventdata, handles)
 
 	TraceFP_render(hObject, handles, true);
     handles=guidata(hObject);
-    global undo_history
+    global undo_history redo_history
     undo_history.push_back(handles);
+    redo_history.clear();
 	fprintf('[TraceFP]\t\tDONE\n.');
 
 
@@ -656,8 +665,9 @@ function new_rectangle_clicked_Callback(hObject, eventdata, handles)
             % render and save data
             TraceFP_render(hObject, handles, false);
             handles=guidata(hObject);
-            global undo_history
+            global undo_history redo_history
             undo_history.push_back(handles);
+            redo_history.clear();
             continue;
         end
         
@@ -716,8 +726,9 @@ function new_rectangle_clicked_Callback(hObject, eventdata, handles)
         % render and save data
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
-        global undo_history
+        global undo_history redo_history
         undo_history.push_back(handles);
+        redo_history.clear();
     end
 
 
@@ -823,8 +834,9 @@ function fit_to_line_ClickedCallback(hObject, eventdata, handles)
         end
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
-        global undo_history
+        global undo_history redo_history
         undo_history.push_back(handles);
+        redo_history.clear();
         fprintf('[TraceFP]\t\tpoints fit to line\n');
     end
 
@@ -837,14 +849,15 @@ function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
     while (true)
         points = [];
         fprintf('[TraceFP]\tselect points to fit into one line...\n');
-        fprintf('[TraceFP]\t\tSelect new point\n');
         pind = 1;
         while (pind > 0)
+            
             pind = TraceFP_select(handles);
             if(pind <= 0)
                 break;
             else
                 points = [points, pind];
+                fprintf('[TraceFP]\t\tSelect new point\n');
             end
         end
 
@@ -864,15 +877,16 @@ function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
         end
 %         TraceFP_render(hObject, handles, false);
 %         handles=guidata(hObject);
-%         global undo_history
+%         global undo_history redo_history
 %         undo_history.push_back(handles);
+%         redo_history.clear();
         fprintf('[TraceFP]\t\tpoints fit to first line determined\n');
         
         % obtain data of the second line, points to be fitted
         
         points_2 = [];
-        fprintf('[TraceFP]\tselect points to fit into one line...\n');
-        fprintf('[TraceFP]\t\tSelect new point\n');
+        fprintf(['[TraceFP]\tselect points to fit into the ',...
+            'orthogonal line...\n']);
         pind = 1;
         while (pind > 0)
             pind = TraceFP_select(handles);
@@ -880,6 +894,7 @@ function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
                 break;
             else
                 points_2 = [points_2, pind];
+                fprintf('[TraceFP]\t\tSelect new point\n');
             end
         end
 
@@ -905,8 +920,9 @@ function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
         end
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
-        global undo_history
+        global undo_history redo_history
         undo_history.push_back(handles);
+        redo_history.clear();
         fprintf('[TraceFP]\t\tpoints fit to orthogonal lines\n');
     end
 
@@ -916,3 +932,66 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
 % hObject    handle to fit_to_existing_line (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+    while (true)
+        
+        % obtain line (represented by 2 points) to fit points into
+        fprintf('[TraceFP]\tselect points of designated line...\n');
+        line = [];
+        for i=1:2
+            result = TraceFP_select(handles);
+            if (result==0)
+                fprintf('[TraceFP]\t\tNo point selected. Exiting line fitting.\n');
+                return;
+            end
+            line = [line, result];
+        end
+        
+        % calculate polynomial for the line
+        line_coordinates = zeros(0,2);
+        for i=1:numel(line)
+            line_coordinates = [line_coordinates; ...
+                handles.control_points(line(i), :)];
+        end
+        P = polyfit(line_coordinates(:,1),line_coordinates(:,2),1);
+
+        fprintf('[TraceFP]\tselect points to fit to the line...\n');
+
+        % obtain points to fit
+        pind = 1;
+        points = [];
+        while (pind > 0)
+            pind = TraceFP_select(handles);
+            if(pind <= 0)
+                break;
+            else
+                fprintf('[TraceFP]\t\tSelect new point\n');
+                points = [points, pind];
+            end
+        end
+        
+        if (numel(points)==0)
+            fprintf(['[TraceFP]\t\tNo points selected. ',...
+                'Exiting fit points to existing line']);
+            return;
+        end
+        
+        % obtain coordinates of the points to fit
+        points_coordinates = zeros(0,2);
+        for i=1:numel(points)
+            points_coordinates = [points_coordinates; ...
+                handles.control_points(points(i), :)];
+        end
+
+        % fit points onto the line
+        for i=1:numel(points)
+           new_coordinate = projectPointToLine(points_coordinates(i, :), P);
+           handles.control_points(points(i), :) = new_coordinate;
+        end
+
+        TraceFP_render(hObject, handles, false);
+        handles=guidata(hObject);
+        global undo_history redo_history
+        undo_history.push_back(handles);
+        redo_history.clear();
+        fprintf('[TraceFP]\t\tpoints fit to existing line\n');
+    end

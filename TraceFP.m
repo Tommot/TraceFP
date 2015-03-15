@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 13-Mar-2015 02:38:29
+% Last Modified by GUIDE v2.5 14-Mar-2015 16:45:49
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -411,7 +411,6 @@ function remove_point_Callback(hObject, eventdata, handles)
 
 	% tell user what we're doing
 	fprintf('[TraceFP]\tremove point...\n');
-    points_removed=false;
     while (true)
         % use selection tool to find a point
         pind = TraceFP_select(handles);
@@ -433,7 +432,6 @@ function remove_point_Callback(hObject, eventdata, handles)
         handles.control_points(pind, :) = [];
 
         fprintf('[TraceFP]\t\tpoint removed\n');
-        points_removed=true;
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
         global undo_history redo_history
@@ -933,7 +931,6 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
-        
         % obtain line (represented by 2 points) to fit points into
         fprintf('[TraceFP]\tselect points of designated line...\n');
         line = [];

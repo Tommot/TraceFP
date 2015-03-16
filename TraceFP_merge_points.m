@@ -1,4 +1,4 @@
-function handles = TraceFP_merge_points(hObject, handles, pind1, pind2 )
+function handles = TraceFP_merge_points(handles, pind1, pind2)
 %TRACEFP_MERGE_POINT Summary of this function goes here
 %   Detailed explanation goes here
 %   Output -- handles, a new handle that has pind1 and pind2 merged

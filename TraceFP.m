@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 14-Mar-2015 16:45:49
+% Last Modified by GUIDE v2.5 15-Mar-2015 19:28:46
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -761,7 +761,7 @@ function clear_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function undo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to fit_to_existing_line (see GCBO)
+% hObject    handle to merge_nearby_point (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history 
@@ -781,7 +781,7 @@ function undo_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function redo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to fit_to_existing_line (see GCBO)
+% hObject    handle to merge_nearby_point (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history
@@ -799,7 +799,7 @@ function redo_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to fit_to_existing_line (see GCBO)
+% hObject    handle to merge_nearby_point (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -841,7 +841,7 @@ function fit_to_line_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to fit_to_existing_line (see GCBO)
+% hObject    handle to merge_nearby_point (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -927,7 +927,7 @@ function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to fit_to_existing_line (see GCBO)
+% hObject    handle to merge_nearby_point (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -992,3 +992,60 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
         redo_history.clear();
         fprintf('[TraceFP]\t\tpoints fit to existing line\n');
     end
+
+
+% --------------------------------------------------------------------
+function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to merge_nearby_point (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+% WARNING: this function will remove all dangling control points
+
+%   method using cluster
+%   use of cluster function refereced from:
+%   https://www.youtube.com/watch?v=aYzjenNNOcc
+    Y=pdist(handles.control_points);
+    Z=linkage(Y);
+    thershold=0.1;
+    label = cluster(Z,'cutoff', thershold);
+    
+    % first create centroid point and redirect all edges to the new points
+    for clusterIdx=1:max(label)
+        
+        % first add a new point
+        % then redirect all 
+        mappedPointsCoor = handles.control_points(...
+                            any(label==clusterIdx,2),:);
+        coor = sum(mappedPointsCoor, 1) / size(mappedPointsCoor,1);
+        handles.control_points = [handles.control_points; coor];
+        idxOfPoint = size(handles.control_points,1);
+        idxToRedirect = find(label==clusterIdx);
+        ArrayIdxToChange = ismember(handles.triangles, idxToRedirect);
+        handles.triangles(ArrayIdxToChange) = idxOfPoint;
+    end
+    
+    % remove invalid triangles
+    for idx=size(handles.triangles,1):-1:1
+        row = handles.triangles(idx, :);
+        if (numel(unique(row)) ~= numel(row))
+            handles.triangles(idx,:)=[];
+            handles.room_ids(idx)=[];
+        end
+    end
+    handles.control_points
+    % remove old points which no edge points to
+    for pind=size(handles.control_points,1):-1:1
+        if (isempty(find(handles.triangles==pind)))
+            % if point does not exist, remove it and update indexing
+            handles.control_points(pind,:)=[];
+            idx = [[1:pind] [pind:size(handles.control_points,1)]];
+            handles.triangles = idx( handles.triangles );
+        end
+    end
+    
+    TraceFP_render(hObject, handles, false);
+    handles=guidata(hObject);
+    global undo_history redo_history
+    undo_history.push_back(handles);
+    redo_history.clear();
+    fprintf('[TraceFP]\t\tpoints fit to existing line\n');

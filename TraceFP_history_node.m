@@ -6,6 +6,7 @@ classdef TraceFP_history_node < handle
         wall_samples
         control_points
         triangles
+        room_ids
         next
         prev
     end
@@ -16,6 +17,7 @@ classdef TraceFP_history_node < handle
                 obj.wall_samples = handles.wall_samples;
                 obj.control_points = handles.control_points;
                 obj.triangles = handles.triangles;
+                obj.room_ids = handles.room_ids;
                 obj.next = 0;
                 obj.prev = 0; 
             end

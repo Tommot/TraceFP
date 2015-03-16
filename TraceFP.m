@@ -775,6 +775,7 @@ function undo_ClickedCallback(hObject, eventdata, handles)
     handles.control_points = undo_history.tail.control_points;
     handles.triangles = undo_history.tail.triangles;
     handles.wall_samples = undo_history.tail.wall_samples;
+    handles.room_ids = undo_history.tail.room_ids;    
     delete(node);
     TraceFP_render(hObject, handles, false);
 
@@ -793,6 +794,7 @@ function redo_ClickedCallback(hObject, eventdata, handles)
     handles.control_points = undo_history.tail.control_points;
     handles.triangles = undo_history.tail.triangles;
     handles.wall_samples = undo_history.tail.wall_samples;
+    handles.room_ids = undo_history.tail.room_ids;
     delete(node);
     TraceFP_render(hObject, handles, false);
 
@@ -1032,7 +1034,6 @@ function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
             handles.room_ids(idx)=[];
         end
     end
-    handles.control_points
     % remove old points which no edge points to
     for pind=size(handles.control_points,1):-1:1
         if (isempty(find(handles.triangles==pind)))
@@ -1042,10 +1043,9 @@ function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
             handles.triangles = idx( handles.triangles );
         end
     end
-    
     TraceFP_render(hObject, handles, false);
     handles=guidata(hObject);
     global undo_history redo_history
     undo_history.push_back(handles);
     redo_history.clear();
-    fprintf('[TraceFP]\t\tpoints fit to existing line\n');
+    fprintf('[TraceFP]\t\tNearby points clustered together.\n');

@@ -1029,7 +1029,11 @@ function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
     % remove invalid triangles
     for idx=size(handles.triangles,1):-1:1
         row = handles.triangles(idx, :);
-        if (numel(unique(row)) ~= numel(row))
+        duplicate_triangles = any(handles.triangles==row(1), 2) ...
+         & any(handles.triangles==row(2), 2) ...
+         & any(handles.triangles==row(3), 2);
+        if (numel(unique(row)) ~= numel(row) || ...
+                sum(duplicate_triangles)>1)
             handles.triangles(idx,:)=[];
             handles.room_ids(idx)=[];
         end

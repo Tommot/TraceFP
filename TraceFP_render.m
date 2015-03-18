@@ -11,6 +11,7 @@ function [] = TraceFP_render(hObject, handles, resize)
 	%
 
 	% set to the program's axes
+    fprintf('[TraceFP]\trendering...\n');
 	axes(handles.axes1);
     XL=xlim;
     YL=ylim;
@@ -133,4 +134,5 @@ function [] = TraceFP_render(hObject, handles, resize)
         ylim(YL);
     end
     guidata(hObject,handles)
+    fprintf('[TraceFP]\t\tfinish rendering\n');
 end

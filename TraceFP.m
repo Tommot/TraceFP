@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 15-Mar-2015 19:28:46
+% Last Modified by GUIDE v2.5 17-Mar-2015 16:07:18
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -135,6 +135,21 @@ function TraceFP_OpeningFcn(hObject, eventdata, handles, varargin)
     g=a(1:x:end,1:y:end,:);
     g(g==255)=5.5*255;
     set(handles.clear,'CData',g);
+    
+    DEBUGGING = true;
+    if (DEBUGGING)
+        fp = read_fp(fullfile('/Users/tomlai/Documents/Projects/TraceFP/sample/mulford2/mulfordf2_gen1_s0.01.fp'));
+        handles.control_points = fp.verts;
+        handles.triangles      = fp.tris;
+        handles.room_ids       = fp.room_inds;
+        handles.current_room   = 1;        
+        handles.wall_samples = readMapData(fullfile('/Users/tomlai/Documents/Projects/TraceFP/sample/mulford2/mulfordf2_gen1_s0.01.dq'));
+        TraceFP_render(hObject, handles, true);
+        handles=guidata(hObject);
+        global undo_history redo_history
+        undo_history.push_back(handles);
+        redo_history.clear();
+    end
 
 % --- Outputs from this function are returned to the command line.
 function varargout = TraceFP_OutputFcn(hObject, eventdata, handles) 
@@ -465,7 +480,7 @@ function open_wall_samples_ClickedCallback(hObject, eventdata, handles)
     global undo_history redo_history
     undo_history.push_back(handles);
     redo_history.clear();
-	fprintf('[TraceFP]\t\tDONE\n.');
+	fprintf('[TraceFP]\t\tDONE\n');
 
 
 % --------------------------------------------------------------------
@@ -564,7 +579,7 @@ function open_fp_ClickedCallback(hObject, eventdata, handles)
 	fprintf('[TraceFP]\tOpen floorplan (*.fp) file...\n');
 	
 	% open the file
-	[fpfile, pathname,success] = uigetfile('*.fp', ...
+	[fpfile,pathname,success] = uigetfile('*.fp', ...
 			'Open Existing Floorplan');
 	if(~success)
 		fprintf('[TraceFP]\t\tNevermind.\n');
@@ -761,7 +776,7 @@ function clear_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function undo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to merge_nearby_point (see GCBO)
+% hObject    handle to merge_two_points (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history 
@@ -782,7 +797,7 @@ function undo_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function redo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to merge_nearby_point (see GCBO)
+% hObject    handle to merge_two_points (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history
@@ -801,7 +816,7 @@ function redo_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to merge_nearby_point (see GCBO)
+% hObject    handle to merge_two_points (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -843,7 +858,7 @@ function fit_to_line_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to merge_nearby_point (see GCBO)
+% hObject    handle to merge_two_points (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -929,7 +944,7 @@ function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to merge_nearby_point (see GCBO)
+% hObject    handle to merge_two_points (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -998,7 +1013,7 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to merge_nearby_point (see GCBO)
+% hObject    handle to merge_two_points (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % WARNING: this function will remove all dangling control points
@@ -1006,12 +1021,14 @@ function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
 %   method using cluster
 %   use of cluster function refereced from:
 %   https://www.youtube.com/watch?v=aYzjenNNOcc
+    fprintf('[TraceFP]\tmerging nearby points...\n');
     Y=pdist(handles.control_points);
     Z=linkage(Y);
-    thershold=0.1;
+    thershold=0.2;
     label = cluster(Z,'cutoff', thershold);
     
     % first create centroid point and redirect all edges to the new points
+    fprintf('[TraceFP]\t\tstep 1: clustering points...\n');
     for clusterIdx=1:max(label)
         
         % first add a new point
@@ -1026,30 +1043,43 @@ function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
         handles.triangles(ArrayIdxToChange) = idxOfPoint;
     end
     
-    % remove invalid triangles
-    for idx=size(handles.triangles,1):-1:1
-        row = handles.triangles(idx, :);
-        duplicate_triangles = any(handles.triangles==row(1), 2) ...
-         & any(handles.triangles==row(2), 2) ...
-         & any(handles.triangles==row(3), 2);
-        if (numel(unique(row)) ~= numel(row) || ...
-                sum(duplicate_triangles)>1)
-            handles.triangles(idx,:)=[];
-            handles.room_ids(idx)=[];
-        end
-    end
-    % remove old points which no edge points to
-    for pind=size(handles.control_points,1):-1:1
-        if (isempty(find(handles.triangles==pind)))
-            % if point does not exist, remove it and update indexing
-            handles.control_points(pind,:)=[];
-            idx = [[1:pind] [pind:size(handles.control_points,1)]];
-            handles.triangles = idx( handles.triangles );
-        end
-    end
+    % remove invalid points and triangles
+    handles = TraceFP_validate_fp(handles);
     TraceFP_render(hObject, handles, false);
     handles=guidata(hObject);
     global undo_history redo_history
     undo_history.push_back(handles);
     redo_history.clear();
     fprintf('[TraceFP]\t\tNearby points clustered together.\n');
+
+
+% --------------------------------------------------------------------
+function merge_two_points_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to merge_two_points (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    while (true)
+        fprintf('[TraceFP]\tmerging points...\n');
+
+        % now ask the user to click a new spot
+        fprintf('[TraceFP]\t\tSelect point to be removed after merge\n');
+        pind1 = TraceFP_select(handles);
+        if(pind1 <= 0)
+            fprintf('[TraceFP]\t\tInvalid point selected. Exit merge points\n');
+            return;
+        end
+
+        fprintf('[TraceFP]\t\tSelect point to be merged into...\n');
+        pind2 = TraceFP_select(handles);
+        if(pind2 <= 0)
+            fprintf('[TraceFP]\t\tInvalid point selected. Exit merge points\n');
+            return;
+        end
+
+        handles = TraceFP_merge_points(handles, pind2, pind1);
+        TraceFP_render(hObject, handles, false);
+        handles=guidata(hObject);
+        global undo_history redo_history
+        undo_history.push_back(handles);
+        redo_history.clear();
+    end

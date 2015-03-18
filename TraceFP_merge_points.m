@@ -24,5 +24,7 @@ function handles = TraceFP_merge_points(handles, pind1, pind2)
 
     % remove pind2 from control point
     handles.control_points(pind2, :) = [];
+    
+    handles = TraceFP_validate_fp(handles);
 end
 

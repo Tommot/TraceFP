@@ -1097,102 +1097,103 @@ function add_point_to_room_ClickedCallback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 
     fprintf('[TraceFP]\tinsert new point for current room...\n');
-    [X,Y,BUTTON] = myginput(1, 'crosshair');
-    if (BUTTON ~= 1)
-        fprintf('[TraceFP]\t\texit insert new point for current room\n');
-        return;
-    end
-    
-    % add to figure
-    handles.control_points = [handles.control_points; X Y];
-    pind_new_point = size(handles.control_points, 1);
+    while (true)
+        [X,Y,BUTTON] = myginput(1, 'crosshair');
+        if (BUTTON ~= 1)
+            fprintf('[TraceFP]\t\texit insert new point for current room\n');
+            return;
+        end
 
-    % obtain the polyline representing all lines on the floorplan
-    % obtain all the pind of points in the current room
-    lineX = [];
-    lineY = [];
-    line_in_current_room = [];
-    for triangleIdx=1:size(handles.triangles, 1)
-        triangle = handles.triangles(triangleIdx, :);
-        for i=1:3
-            lineX = [lineX, handles.control_points(triangle(i), 1)];
-            lineY = [lineY, handles.control_points(triangle(i), 2)];
-        end
-        lineX = [lineX, handles.control_points(triangle(1), 1)];
-        lineY = [lineY, handles.control_points(triangle(1), 2)];
-        if (triangleIdx~=size(handles.triangles, 1))
-            lineX = [lineX,NaN];
-            lineY = [lineY,NaN];
-        end
-        if (handles.room_ids(triangleIdx) == handles.current_room)
-            line_in_current_room = [line_in_current_room; ...
-                handles.triangles(triangleIdx, 1:2); ...
-                handles.triangles(triangleIdx, 2:3); ...
-                handles.triangles(triangleIdx, 1), ...
-                handles.triangles(triangleIdx, 3)];
-        end
-    end
-    
-    % for each line, try to add the corresponding triangle
-    for lineIdx=1:size(line_in_current_room,1)
-        % list out the line of the triangle
-        pind_1=line_in_current_room(lineIdx,1);
-        pind_2=line_in_current_room(lineIdx,2);
-        triangle_line_X = [X, ...
-                        handles.control_points(pind_1,1),...
-                        handles.control_points(pind_2,1),...
-                        X];
-        triangle_line_Y = [Y, ...
-                        handles.control_points(pind_1,2),...
-                        handles.control_points(pind_2,2),...
-                        Y];
-        [intersectX intersectY] = polyxpoly(lineX,...
-                                            lineY,...
-                                            triangle_line_X,...
-                                            triangle_line_Y, 'unique');
-        % there must be only a line of intersection
-        % before check need to remove all pind_1 and pind_2
-        for intersectIdx = numel(intersectX):-1:1
-            if ((intersectX(intersectIdx) == ...
-                    handles.control_points(pind_1,1)  && ...
-                    intersectY(intersectIdx) == ...
-                    handles.control_points(pind_1,2)) || ...
-                (intersectX(intersectIdx) == ...
-                    handles.control_points(pind_2,1)  && ...
-                    intersectY(intersectIdx) == ...
-                    handles.control_points(pind_2,2)))
-                intersectX(intersectIdx) = [];
-                intersectY(intersectIdx) = [];
+        % add to figure
+        handles.control_points = [handles.control_points; X Y];
+        pind_new_point = size(handles.control_points, 1);
+
+        % obtain the polyline representing all lines on the floorplan
+        % obtain all the pind of points in the current room
+        lineX = [];
+        lineY = [];
+        line_in_current_room = [];
+        for triangleIdx=1:size(handles.triangles, 1)
+            triangle = handles.triangles(triangleIdx, :);
+            for i=1:3
+                lineX = [lineX, handles.control_points(triangle(i), 1)];
+                lineY = [lineY, handles.control_points(triangle(i), 2)];
+            end
+            lineX = [lineX, handles.control_points(triangle(1), 1)];
+            lineY = [lineY, handles.control_points(triangle(1), 2)];
+            if (triangleIdx~=size(handles.triangles, 1))
+                lineX = [lineX,NaN];
+                lineY = [lineY,NaN];
+            end
+            if (handles.room_ids(triangleIdx) == handles.current_room)
+                line_in_current_room = [line_in_current_room; ...
+                    handles.triangles(triangleIdx, 1:2); ...
+                    handles.triangles(triangleIdx, 2:3); ...
+                    handles.triangles(triangleIdx, 1), ...
+                    handles.triangles(triangleIdx, 3)];
             end
         end
 
-        if (numel(intersectX) == 0)
-            pinds = [pind_new_point, pind_1, pind_2];
-            % check if triangle oriented correctly
-            orient = det([ 	(handles.control_points(pinds(1),:) ...
-                        - handles.control_points(pinds(3),:)) ;
-                    (handles.control_points(pinds(2),:) ...
-                        - handles.control_points(pinds(3),:)) ]);
-            if(orient < 0)
-                fprintf('[TraceFP]\t\treordering to be counterclockwise\n');
-                pinds = fliplr(pinds);
+        % for each line, try to add the corresponding triangle
+        for lineIdx=1:size(line_in_current_room,1)
+            % list out the line of the triangle
+            pind_1=line_in_current_room(lineIdx,1);
+            pind_2=line_in_current_room(lineIdx,2);
+            triangle_line_X = [X, ...
+                            handles.control_points(pind_1,1),...
+                            handles.control_points(pind_2,1),...
+                            X];
+            triangle_line_Y = [Y, ...
+                            handles.control_points(pind_1,2),...
+                            handles.control_points(pind_2,2),...
+                            Y];
+            [intersectX intersectY] = polyxpoly(lineX,...
+                                                lineY,...
+                                                triangle_line_X,...
+                                                triangle_line_Y, 'unique');
+            % there must be only a line of intersection
+            % before check need to remove all pind_1 and pind_2
+            for intersectIdx = numel(intersectX):-1:1
+                if ((intersectX(intersectIdx) == ...
+                        handles.control_points(pind_1,1)  && ...
+                        intersectY(intersectIdx) == ...
+                        handles.control_points(pind_1,2)) || ...
+                    (intersectX(intersectIdx) == ...
+                        handles.control_points(pind_2,1)  && ...
+                        intersectY(intersectIdx) == ...
+                        handles.control_points(pind_2,2)))
+                    intersectX(intersectIdx) = [];
+                    intersectY(intersectIdx) = [];
+                end
             end
 
-            % add this triangle
-            handles.triangles = [handles.triangles; pinds];
-            handles.room_ids = [handles.room_ids ; handles.current_room];
-            fprintf('[TraceFP]\t\tadded new triangle\n'); 
+            if (numel(intersectX) == 0)
+                pinds = [pind_new_point, pind_1, pind_2];
+                % check if triangle oriented correctly
+                orient = det([ 	(handles.control_points(pinds(1),:) ...
+                            - handles.control_points(pinds(3),:)) ;
+                        (handles.control_points(pinds(2),:) ...
+                            - handles.control_points(pinds(3),:)) ]);
+                if(orient < 0)
+                    fprintf('[TraceFP]\t\treordering to be counterclockwise\n');
+                    pinds = fliplr(pinds);
+                end
+
+                % add this triangle
+                handles.triangles = [handles.triangles; pinds];
+                handles.room_ids = [handles.room_ids ; handles.current_room];
+                fprintf('[TraceFP]\t\tadded new triangle\n'); 
+            end
         end
+
+        handles = TraceFP_validate_fp(handles);
+        TraceFP_render(hObject, handles, false);
+        handles=guidata(hObject);
+        global undo_history redo_history
+        undo_history.push_back(handles);
+        redo_history.clear(); 
+        fprintf('[TraceFP]\tDONE inserting new point for current room\n');
     end
-        
-    handles = TraceFP_validate_fp(handles);
-    TraceFP_render(hObject, handles, false);
-    handles=guidata(hObject);
-    global undo_history redo_history
-    undo_history.push_back(handles);
-    redo_history.clear(); 
-    fprintf('[TraceFP]\tDONE inserting new point for current room\n');
-    
     
     
     

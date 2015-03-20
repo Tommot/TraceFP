@@ -1194,19 +1194,3 @@ function add_point_to_room_ClickedCallback(hObject, eventdata, handles)
         redo_history.clear(); 
         fprintf('[TraceFP]\tDONE inserting new point for current room\n');
     end
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    

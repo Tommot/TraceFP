@@ -136,7 +136,7 @@ function TraceFP_OpeningFcn(hObject, eventdata, handles, varargin)
     g(g==255)=5.5*255;
     set(handles.clear,'CData',g);
     
-    DEBUGGING = false;
+    DEBUGGING = true;
     if (DEBUGGING)
         fp = read_fp(fullfile('/Users/tomlai/Documents/Projects/TraceFP/sample/mulford2/mulfordf2_gen1_s0.01.fp'));
         handles.control_points = fp.verts;

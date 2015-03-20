@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 17-Mar-2015 16:07:18
+% Last Modified by GUIDE v2.5 19-Mar-2015 16:19:47
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -136,7 +136,7 @@ function TraceFP_OpeningFcn(hObject, eventdata, handles, varargin)
     g(g==255)=5.5*255;
     set(handles.clear,'CData',g);
     
-    DEBUGGING = true;
+    DEBUGGING = false;
     if (DEBUGGING)
         fp = read_fp(fullfile('/Users/tomlai/Documents/Projects/TraceFP/sample/mulford2/mulfordf2_gen1_s0.01.fp'));
         handles.control_points = fp.verts;
@@ -323,6 +323,12 @@ function set_room_Callback(hObject, eventdata, handles)
 
 	fprintf('[TraceFP]\tset current room...\n');
 
+    if (numel(handles.triangles) == 0)
+        fprintf('[TraceFP]\tNo room in floorplan right now. Reset current room id to 1\n');
+        handles.current_room = 1;
+        return;
+    end
+    
 	% select a triangle
 	ind = TraceFP_findtri(handles);
 	if(ind <= 0)
@@ -359,15 +365,12 @@ function new_point_Callback(hObject, eventdata, handles)
 % handles    structure with handles and user data (see GUIDATA)
 	% get new point
     fprintf('[TraceFP]\tnew point...\n');
-    points_created=false;
     while (true)
         [X,Y,BUTTON] = myginput(1, 'crosshair');
         if (BUTTON == 1)
             fprintf('[TraceFP]\t\tinsert new point\n');
-
             % add to figure
             handles.control_points = [handles.control_points; X Y];
-            points_created=true;
             % render data
             TraceFP_render(hObject, handles, false);
             handles=guidata(hObject);
@@ -776,7 +779,7 @@ function clear_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function undo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to merge_two_points (see GCBO)
+% hObject    handle to add_point_to_room (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history 
@@ -790,14 +793,15 @@ function undo_ClickedCallback(hObject, eventdata, handles)
     handles.control_points = undo_history.tail.control_points;
     handles.triangles = undo_history.tail.triangles;
     handles.wall_samples = undo_history.tail.wall_samples;
-    handles.room_ids = undo_history.tail.room_ids;    
+    handles.room_ids = undo_history.tail.room_ids;
+    handles.current_room = undo_history.tail.current_room;
     delete(node);
     TraceFP_render(hObject, handles, false);
 
 
 % --------------------------------------------------------------------
 function redo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to merge_two_points (see GCBO)
+% hObject    handle to add_point_to_room (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history
@@ -810,13 +814,14 @@ function redo_ClickedCallback(hObject, eventdata, handles)
     handles.triangles = undo_history.tail.triangles;
     handles.wall_samples = undo_history.tail.wall_samples;
     handles.room_ids = undo_history.tail.room_ids;
+    handles.current_room = undo_history.tail.current_room;
     delete(node);
     TraceFP_render(hObject, handles, false);
 
 
 % --------------------------------------------------------------------
 function fit_to_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to merge_two_points (see GCBO)
+% hObject    handle to add_point_to_room (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -858,7 +863,7 @@ function fit_to_line_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to merge_two_points (see GCBO)
+% hObject    handle to add_point_to_room (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -944,7 +949,7 @@ function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to merge_two_points (see GCBO)
+% hObject    handle to add_point_to_room (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -1013,7 +1018,7 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to merge_two_points (see GCBO)
+% hObject    handle to add_point_to_room (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % WARNING: this function will remove all dangling control points
@@ -1055,7 +1060,7 @@ function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function merge_two_points_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to merge_two_points (see GCBO)
+% hObject    handle to add_point_to_room (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -1083,3 +1088,124 @@ function merge_two_points_ClickedCallback(hObject, eventdata, handles)
         undo_history.push_back(handles);
         redo_history.clear();
     end
+
+
+% --------------------------------------------------------------------
+function add_point_to_room_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to add_point_to_room (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+
+    fprintf('[TraceFP]\tinsert new point for current room...\n');
+    [X,Y,BUTTON] = myginput(1, 'crosshair');
+    if (BUTTON ~= 1)
+        fprintf('[TraceFP]\t\texit insert new point for current room\n');
+        return;
+    end
+    
+    % add to figure
+    handles.control_points = [handles.control_points; X Y];
+    pind_new_point = size(handles.control_points, 1);
+
+    % obtain the polyline representing all lines on the floorplan
+    % obtain all the pind of points in the current room
+    lineX = [];
+    lineY = [];
+    line_in_current_room = [];
+    for triangleIdx=1:size(handles.triangles, 1)
+        triangle = handles.triangles(triangleIdx, :);
+        for i=1:3
+            lineX = [lineX, handles.control_points(triangle(i), 1)];
+            lineY = [lineY, handles.control_points(triangle(i), 2)];
+        end
+        lineX = [lineX, handles.control_points(triangle(1), 1)];
+        lineY = [lineY, handles.control_points(triangle(1), 2)];
+        if (triangleIdx~=size(handles.triangles, 1))
+            lineX = [lineX,NaN];
+            lineY = [lineY,NaN];
+        end
+        if (handles.room_ids(triangleIdx) == handles.current_room)
+            line_in_current_room = [line_in_current_room; ...
+                handles.triangles(triangleIdx, 1:2); ...
+                handles.triangles(triangleIdx, 2:3); ...
+                handles.triangles(triangleIdx, 1), ...
+                handles.triangles(triangleIdx, 3)];
+        end
+    end
+    
+    % for each line, try to add the corresponding triangle
+    for lineIdx=1:size(line_in_current_room,1)
+        % list out the line of the triangle
+        pind_1=line_in_current_room(lineIdx,1);
+        pind_2=line_in_current_room(lineIdx,2);
+        triangle_line_X = [X, ...
+                        handles.control_points(pind_1,1),...
+                        handles.control_points(pind_2,1),...
+                        X];
+        triangle_line_Y = [Y, ...
+                        handles.control_points(pind_1,2),...
+                        handles.control_points(pind_2,2),...
+                        Y];
+        [intersectX intersectY] = polyxpoly(lineX,...
+                                            lineY,...
+                                            triangle_line_X,...
+                                            triangle_line_Y, 'unique');
+        % there must be only a line of intersection
+        % before check need to remove all pind_1 and pind_2
+        for intersectIdx = numel(intersectX):-1:1
+            if ((intersectX(intersectIdx) == ...
+                    handles.control_points(pind_1,1)  && ...
+                    intersectY(intersectIdx) == ...
+                    handles.control_points(pind_1,2)) || ...
+                (intersectX(intersectIdx) == ...
+                    handles.control_points(pind_2,1)  && ...
+                    intersectY(intersectIdx) == ...
+                    handles.control_points(pind_2,2)))
+                intersectX(intersectIdx) = [];
+                intersectY(intersectIdx) = [];
+            end
+        end
+
+        if (numel(intersectX) == 0)
+            pinds = [pind_new_point, pind_1, pind_2];
+            % check if triangle oriented correctly
+            orient = det([ 	(handles.control_points(pinds(1),:) ...
+                        - handles.control_points(pinds(3),:)) ;
+                    (handles.control_points(pinds(2),:) ...
+                        - handles.control_points(pinds(3),:)) ]);
+            if(orient < 0)
+                fprintf('[TraceFP]\t\treordering to be counterclockwise\n');
+                pinds = fliplr(pinds);
+            end
+
+            % add this triangle
+            handles.triangles = [handles.triangles; pinds];
+            handles.room_ids = [handles.room_ids ; handles.current_room];
+            fprintf('[TraceFP]\t\tadded new triangle\n'); 
+        end
+    end
+        
+    handles = TraceFP_validate_fp(handles);
+    TraceFP_render(hObject, handles, false);
+    handles=guidata(hObject);
+    global undo_history redo_history
+    undo_history.push_back(handles);
+    redo_history.clear(); 
+    fprintf('[TraceFP]\tDONE inserting new point for current room\n');
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    

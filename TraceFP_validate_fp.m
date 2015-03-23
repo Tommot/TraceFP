@@ -83,7 +83,30 @@ function handles = TraceFP_validate_fp( handles )
         % remove this point from our list of points
         handles.control_points(pind, :) = [];
     end
-    % fprintf('[TraceFP]\t\tstep 4: removing unused room_id...\n');
     
+    % fprintf('[TraceFP]\t\tstep 4: removing unused room_id...\n');
+    max_room_id = max(handles.room_ids);
+    for pind=max_room_id:-1:1
+        if (pind == handles.current_room || ...
+                any(handles.room_ids==pind))
+            continue;
+        else
+            % remove this room id
+            idx = [[1:pind] [pind:max_room_id]];
+            handles.room_ids = idx(handles.room_ids);
+            handles.current_room = idx(handles.current_room);
+        end
+    end
+    
+    % bug catching, hopefully this will not be triggered
+    % otherwise, if triggered under any circumstance, 
+    % this piece of code will try to enforce consistency on
+    % handles.triangles and handles.room_ids
+    while (size(handles.triangles, 1) > numel(handles.room_ids))
+        handles.triangles(size(handles.triangles, 1),:) = [];
+    end
+    while (size(handles.triangles, 1) < numel(handles.room_ids))
+        handles.room_ids(numel(handles.room_ids))=[];
+    end
 end
 

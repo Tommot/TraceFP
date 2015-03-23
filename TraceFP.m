@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 19-Mar-2015 16:19:47
+% Last Modified by GUIDE v2.5 23-Mar-2015 01:11:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -136,7 +136,7 @@ function TraceFP_OpeningFcn(hObject, eventdata, handles, varargin)
     g(g==255)=5.5*255;
     set(handles.clear,'CData',g);
     
-    DEBUGGING = true;
+    DEBUGGING = false;
     if (DEBUGGING)
         fp = read_fp(fullfile('/Users/tomlai/Documents/Projects/TraceFP/sample/mulford2/mulfordf2_gen1_s0.01.fp'));
         handles.control_points = fp.verts;
@@ -233,26 +233,10 @@ function new_triangle_Callback(hObject, eventdata, handles)
 	fprintf('[TraceFP]\tNew triangle:  select three points...\n');
     while (true)
         % get the point indices
-        pinds = zeros(1,3);
-        i=1;
-        while i<=3
-            pinds(i) = TraceFP_select(handles);
-            if (length(pinds) == 1 || pinds(1) <= 0)
-                fprintf(['[TraceFP]\t\tExit point selection.\n']);
-                return;
-            elseif(length(unique(pinds(1:i))) < i || any(pinds(1:i) <= 0))
-                fprintf(['[TraceFP]\t\tFound repeated/invalid points, ', ...
-                    'exiting triangle selection.\n']);
-                return;
-            else
-                i=i+1;
-            end
-        end
-
-        % check for invalid
-        if(length(unique(pinds)) < 3 || any(pinds <= 0))
+        pinds = TraceFP_select(handles);
+        if (numel(pinds) ~= 3)
             fprintf(['[TraceFP]\t\tFound repeated/invalid points, ', ...
-                    'discarding selection.\n']);
+                    'exiting triangle selection.\n']);
             return;
         end
 
@@ -396,9 +380,13 @@ function move_point_Callback(hObject, eventdata, handles)
     while (true)
         fprintf('[TraceFP]\t\tSelect new point\n');
         pind = TraceFP_select(handles);
-        if(pind <= 0)
-            fprintf('[TraceFP]\tExit move point\n');
+        if (pind == 0)
+            fprintf('[TraceFP]\t\tExit move point\n');
             return;
+        end
+        if (numel(pind) ~= 1)
+            fprintf('[TraceFP]\t\tInvalid point, Reselecting point...\n');
+            continue;
         end
 
         % now ask the user to click a new spot
@@ -431,23 +419,28 @@ function remove_point_Callback(hObject, eventdata, handles)
 	fprintf('[TraceFP]\tremove point...\n');
     while (true)
         % use selection tool to find a point
-        pind = TraceFP_select(handles);
-        if(pind <= 0)
+        pinds = TraceFP_select(handles);
+        if(pinds == 0)
             fprintf('[TraceFP]\t\texit remove points\n');
             return;
         end
+        
+        pinds = sort(pinds, 2, 'descend');
 
-        % remove triangles that contain this point
-        to_remove = any( handles.triangles == pind, 2);
-        handles.triangles( to_remove , :) = [];
-        handles.room_ids( to_remove ) = [];
+        for idx=1:numel(pinds)
+            % remove triangles that contain this point
+            pind = pinds(idx);
+            to_remove = any( handles.triangles == pind, 2);
+            handles.triangles( to_remove , :) = [];
+            handles.room_ids( to_remove ) = [];
 
-        % update the indexing in remaining triangles
-        idx = [[1:pind] [pind:size(handles.control_points,1)]];
-        handles.triangles = idx( handles.triangles );
+            % update the indexing in remaining triangles
+            idx = [[1:pind] [pind:size(handles.control_points,1)]];
+            handles.triangles = idx( handles.triangles );
 
-        % remove this point from our list of points
-        handles.control_points(pind, :) = [];
+            % remove this point from our list of points
+            handles.control_points(pind, :) = [];
+        end
 
         fprintf('[TraceFP]\t\tpoint removed\n');
         TraceFP_render(hObject, handles, false);
@@ -645,7 +638,7 @@ function new_rectangle_clicked_Callback(hObject, eventdata, handles)
         end
 
         % check for invalid
-        if(length(unique(pinds)) < 3 || any(pinds <= 0))
+        if(length(unique(pinds)) < 3 || any(isempty(pinds)))
             fprintf(['[TraceFP]\t\tFound repeated/invalid points, ', ...
                     'discarding selection.\n']);
             return;
@@ -779,7 +772,7 @@ function clear_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function undo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to add_point_to_room (see GCBO)
+% hObject    handle to test (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history 
@@ -801,7 +794,7 @@ function undo_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function redo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to add_point_to_room (see GCBO)
+% hObject    handle to test (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history
@@ -821,27 +814,19 @@ function redo_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to add_point_to_room (see GCBO)
+% hObject    handle to test (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
         points = [];
         fprintf('[TraceFP]\tselect points to fit into one line...\n');
         fprintf('[TraceFP]\t\tSelect new point\n');
-        pind = 1;
-        while (pind > 0)
-            pind = TraceFP_select(handles);
-            if(pind <= 0)
-                break;
-            else
-                points = [points, pind];
-            end
+        pinds = TraceFP_select(handles);
+        if (pinds == 0)
+            fprintf('[TraceFP]\t\tExiting line fitting.\n');
+            return
         end
 
-        if (numel(points)==0)
-            fprintf('[TraceFP]\t\tExiting line fitting.\n');
-            return;
-        end
         % retrieves coordinates of points
         points_coordinates = zeros(0,2);
         for i=1:numel(points)
@@ -863,28 +848,39 @@ function fit_to_line_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to add_point_to_room (see GCBO)
+% hObject    handle to test (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
-        points = [];
         fprintf('[TraceFP]\tselect points to fit into one line...\n');
-        pind = 1;
-        while (pind > 0)
-            
-            pind = TraceFP_select(handles);
-            if(pind <= 0)
-                break;
-            else
-                points = [points, pind];
-                fprintf('[TraceFP]\t\tSelect new point\n');
-            end
+        points = TraceFP_select(handles);
+        if (points == 0)
+            fprintf('[TraceFP]\t\tExiting orthogonal line fitting.\n');
+            return
+        end
+        fprintf('[TraceFP]\t\tpoints fit to first line determined\n');
+        
+        % obtain fix point between the two line
+        fprintf(['[TraceFP]\tselect fix point of orthogonal line\n']);
+        fix_point_pind = TraceFP_select(handles);
+        if (fix_point_pind == 0)
+            fprintf('[TraceFP]\t\tExiting orthogonal line fitting.\n');
+            return
+        elseif (numel(fix_point_pind) > 1)
+            fix_point_pind = fix_point_pind(1);
+        end
+        fprintf(['[TraceFP]\tfix point determined\n']);
+        
+        % obtain data of the second line, points to be fitted
+        points_2 = [];
+        fprintf(['[TraceFP]\tselect points to fit into the ',...
+            'orthogonal line...\n']);
+        points_2 = TraceFP_select(handles);
+        if (points_2 == 0)
+            fprintf('[TraceFP]\t\tExiting orthogonal line fitting.\n');
+            return
         end
 
-        if (numel(points)==0)
-            fprintf('[TraceFP]\t\tExiting orthogonal line fitting.\n');
-            return;
-        end
         % retrieves coordinates of points
         points_coordinates = zeros(0,2);
         for i=1:numel(points)
@@ -895,35 +891,7 @@ function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
            new_coordinate = projectPointToLine(points_coordinates(i, :), P);
            handles.control_points(points(i), :) = new_coordinate;
         end
-%         TraceFP_render(hObject, handles, false);
-%         handles=guidata(hObject);
-%         global undo_history redo_history
-%         undo_history.push_back(handles);
-%         redo_history.clear();
-        fprintf('[TraceFP]\t\tpoints fit to first line determined\n');
-        
-        % obtain data of the second line, points to be fitted
-        
-        points_2 = [];
-        fprintf(['[TraceFP]\tselect points to fit into the ',...
-            'orthogonal line...\n']);
-        pind = 1;
-        while (pind > 0)
-            pind = TraceFP_select(handles);
-            if(pind <= 0)
-                break;
-            else
-                points_2 = [points_2, pind];
-                fprintf('[TraceFP]\t\tSelect new point\n');
-            end
-        end
 
-        if (numel(points_2)==0)
-            fprintf('[TraceFP]\t\tExiting line fitting.\n');
-            return;
-        end
-        
-        fix_point_pind = points(numel(points));
         % retrieves coordinates of points
         points_coordinates_2 = zeros(0,2);
         for i=1:numel(points_2)
@@ -949,7 +917,7 @@ function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to add_point_to_room (see GCBO)
+% hObject    handle to test (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -961,8 +929,18 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
             if (result==0)
                 fprintf('[TraceFP]\t\tNo point selected. Exiting line fitting.\n');
                 return;
+            elseif (numel(result) > 1)
+                result = result(1);
             end
             line = [line, result];
+        end
+        
+        fprintf('[TraceFP]\tselect points to fit to the line...\n');
+        % obtain points to fit
+        points = TraceFP_select(handles);
+        if (points == 0)
+            fprintf('[TraceFP]\t\tExiting fit points to exiting line.\n');
+            return
         end
         
         % calculate polynomial for the line
@@ -972,27 +950,6 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
                 handles.control_points(line(i), :)];
         end
         P = polyfit(line_coordinates(:,1),line_coordinates(:,2),1);
-
-        fprintf('[TraceFP]\tselect points to fit to the line...\n');
-
-        % obtain points to fit
-        pind = 1;
-        points = [];
-        while (pind > 0)
-            pind = TraceFP_select(handles);
-            if(pind <= 0)
-                break;
-            else
-                fprintf('[TraceFP]\t\tSelect new point\n');
-                points = [points, pind];
-            end
-        end
-        
-        if (numel(points)==0)
-            fprintf(['[TraceFP]\t\tNo points selected. ',...
-                'Exiting fit points to existing line']);
-            return;
-        end
         
         % obtain coordinates of the points to fit
         points_coordinates = zeros(0,2);
@@ -1018,7 +975,7 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to add_point_to_room (see GCBO)
+% hObject    handle to test (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % WARNING: this function will remove all dangling control points
@@ -1059,29 +1016,31 @@ function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
 
 
 % --------------------------------------------------------------------
-function merge_two_points_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to add_point_to_room (see GCBO)
+function merge_points_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to test (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
         fprintf('[TraceFP]\tmerging points...\n');
 
-        % now ask the user to click a new spot
-        fprintf('[TraceFP]\t\tSelect point to be removed after merge\n');
-        pind1 = TraceFP_select(handles);
-        if(pind1 <= 0)
-            fprintf('[TraceFP]\t\tInvalid point selected. Exit merge points\n');
-            return;
-        end
-
         fprintf('[TraceFP]\t\tSelect point to be merged into...\n');
-        pind2 = TraceFP_select(handles);
-        if(pind2 <= 0)
+        pind = TraceFP_select(handles);
+        if(pind == 0)
+            fprintf('[TraceFP]\t\tInvalid point selected. Exit merge points\n');
+            return;
+        elseif (numel(pind) > 1)
+            pind = pind(1);
+        end
+        
+        % now ask the user to click a new spot
+        fprintf('[TraceFP]\t\tSelect points to be removed after merge\n');
+        pinds2 = TraceFP_select(handles);
+        if(pinds2 == 0)
             fprintf('[TraceFP]\t\tInvalid point selected. Exit merge points\n');
             return;
         end
-
-        handles = TraceFP_merge_points(handles, pind2, pind1);
+        
+        handles = TraceFP_merge_points(handles, pind, pinds2);
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
         global undo_history redo_history
@@ -1092,7 +1051,7 @@ function merge_two_points_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function add_point_to_room_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to add_point_to_room (see GCBO)
+% hObject    handle to test (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 

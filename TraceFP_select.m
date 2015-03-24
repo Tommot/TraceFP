@@ -39,7 +39,7 @@ function ind = TraceFP_select(handles)
     number_of_element_selected = numel(ind);
 	if (number_of_element_selected==0)
 		fprintf('[TraceFP]\t\tno point selected\n');
-        ind = 0
+        ind = 0;
     elseif (number_of_element_selected>1)
         if (iscell(ind))
             rtn = [];

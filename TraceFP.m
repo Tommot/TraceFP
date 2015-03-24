@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 23-Mar-2015 01:11:19
+% Last Modified by GUIDE v2.5 23-Mar-2015 18:38:33
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -94,7 +94,7 @@ function TraceFP_OpeningFcn(hObject, eventdata, handles, varargin)
     y=ceil(c/30); 
     g=a(1:x:end,1:y:end,:);
     g(g==255)=5.5*255;
-    set(handles.move_point,'CData',g);
+    set(handles.merge_and_move_point,'CData',g);
     
     [a,map]=imread('img/remove_point.jpg');
     [r,c,d]=size(a); 
@@ -368,9 +368,9 @@ function new_point_Callback(hObject, eventdata, handles)
     end
 
 
-% --- Executes on button press in move_point.
-function move_point_Callback(hObject, eventdata, handles)
-% hObject    handle to move_point (see GCBO)
+% --- Executes on button press in merge_and_move_point.
+function merge_and_move_point_Callback(hObject, eventdata, handles)
+% hObject    handle to merge_and_move_point (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -379,14 +379,10 @@ function move_point_Callback(hObject, eventdata, handles)
 	% use selection tool to find a point
     while (true)
         fprintf('[TraceFP]\t\tSelect new point\n');
-        pind = TraceFP_select(handles);
-        if (pind == 0)
+        pinds = TraceFP_select(handles);
+        if (pinds == 0)
             fprintf('[TraceFP]\t\tExit move point\n');
             return;
-        end
-        if (numel(pind) ~= 1)
-            fprintf('[TraceFP]\t\tInvalid point, Reselecting point...\n');
-            continue;
         end
 
         % now ask the user to click a new spot
@@ -396,9 +392,12 @@ function move_point_Callback(hObject, eventdata, handles)
             fprintf('[TraceFP]\tExit move point\n');
             return;
         end
+        
+        handles.control_points = [handles.control_points; X Y];
+        pind = size(handles.control_points, 1);
+        handles = TraceFP_merge_points(handles, pind, pinds);
 
         % set point to that location
-        handles.control_points(pind, :) = [X, Y];  
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
         global undo_history redo_history
@@ -942,24 +941,24 @@ function merge_points_ClickedCallback(hObject, eventdata, handles)
     while (true)
         fprintf('[TraceFP]\tmerging points...\n');
 
-        fprintf('[TraceFP]\t\tSelect point to be merged into...\n');
-        pind = TraceFP_select(handles);
-        if(pind == 0)
-            fprintf('[TraceFP]\t\tInvalid point selected. Exit merge points\n');
-            return;
-        elseif (numel(pind) > 1)
-            pind = pind(1);
-        end
-        
         % now ask the user to click a new spot
         fprintf('[TraceFP]\t\tSelect points to be removed after merge\n');
-        pinds2 = TraceFP_select(handles);
-        if(pinds2 == 0)
+        pinds1 = TraceFP_select(handles);
+        if(pinds1 == 0)
             fprintf('[TraceFP]\t\tInvalid point selected. Exit merge points\n');
             return;
         end
         
-        handles = TraceFP_merge_points(handles, pind, pinds2);
+        fprintf('[TraceFP]\t\tSelect point to be merged into...\n');
+        pind2 = TraceFP_select(handles);
+        if(pind2 == 0)
+            fprintf('[TraceFP]\t\tInvalid point selected. Exit merge points\n');
+            return;
+        elseif (numel(pind2) > 1)
+            pind2 = pind2(1);
+        end
+        
+        handles = TraceFP_merge_points(handles, pind2, pinds1);
         TraceFP_render(hObject, handles, false);
         handles=guidata(hObject);
         global undo_history redo_history

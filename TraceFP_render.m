@@ -145,6 +145,8 @@ function [] = TraceFP_render(hObject, handles, resize)
     if (~resize)
         xlim(XL);
         ylim(YL);
+    else
+        axis equal;
     end
     guidata(hObject,handles)
     fprintf('[TraceFP]\t\tfinish rendering\n');

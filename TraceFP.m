@@ -136,7 +136,7 @@ function TraceFP_OpeningFcn(hObject, eventdata, handles, varargin)
     g(g==255)=5.5*255;
     set(handles.clear,'CData',g);
     
-    DEBUGGING = false;
+    DEBUGGING = true;
     if (DEBUGGING)
         fp = read_fp(fullfile('/Users/tomlai/Documents/Projects/TraceFP/sample/mulford2/mulfordf2_gen1_s0.01.fp'));
         handles.control_points = fp.verts;
@@ -899,7 +899,7 @@ function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
     fprintf('[TraceFP]\tmerging nearby points...\n');
     Y=pdist(handles.control_points);
     Z=linkage(Y);
-    thershold=0.2;
+    thershold=0.5;
     label = cluster(Z,'cutoff', thershold);
     
     % first create centroid point and redirect all edges to the new points

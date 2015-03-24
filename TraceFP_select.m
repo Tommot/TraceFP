@@ -4,7 +4,6 @@ function ind = TraceFP_select(handles)
 	%	Selects a single control point via the mouse
 	%
 
-
 	% if wall samples are defined, then need to ignore them
 	if(handles.wall_samples_plot ~= 0)
 

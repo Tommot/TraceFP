@@ -25,15 +25,15 @@ function [] = TraceFP_render(hObject, handles, resize)
             && isempty(handles.triangles))
         if (handles.control_points_plot~=0)
             delete(handles.control_points_plot);
-            handles.control_points_plot == 0;
+            handles.control_points_plot = 0;
         end
         if (handles.triangles_plot~=0)
             delete(handles.triangles_plot);
-            handles.triangles_plot == 0;
+            handles.triangles_plot = 0;
         end
         if (handles.wall_samples_plot~=0)
             delete(handles.wall_samples_plot);
-            handles.wall_samples_plot == 0;
+            handles.wall_samples_plot = 0;
         end
         cla;
         if (~resize)

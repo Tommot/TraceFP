@@ -84,7 +84,7 @@ function handles = TraceFP_validate_fp( handles )
         handles.control_points(pind, :) = [];
     end
     
-    % fprintf('[TraceFP]\t\tstep 4: removing unused room_id...\n');
+    fprintf('[TraceFP]\t\tstep 4: removing unused room_id...\n');
     max_room_id = max(handles.room_ids);
     for pind=max_room_id:-1:1
         if (pind == handles.current_room || ...

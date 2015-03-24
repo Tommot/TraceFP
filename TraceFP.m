@@ -605,132 +605,46 @@ function open_fp_ClickedCallback(hObject, eventdata, handles)
 	fprintf('[TraceFP]\t\tDONE\n.');
 
 
-% --- Executes on button press in button New Rectangle.
-function new_rectangle_clicked_Callback(hObject, eventdata, handles)
-% hObject    handle to new_rectangle (see GCBO)
+% --- Executes on button press in button New Polygon.
+function new_polygon_clicked_Callback(hObject, eventdata, handles)
+% hObject    handle to new_polygon (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    
-    while (size(handles.triangles, 1) > numel(handles.room_ids))
-        handles.triangles(size(handles.triangles, 1),:) = [];
-    end
-    while (size(handles.triangles, 1) < numel(handles.room_ids))
-        handles.room_ids(numel(handles.room_ids))=[];
-    end
 
-    fprintf('[TraceFP]\tNew rectangle:  select four points...\n');
+    fprintf('[TraceFP]\tNew polygon:  select four points...\n');
     while (true)
         % get the point indices
-        pinds = zeros(1,3);
-        i=1;
-        while i<=3
-            pinds(i) = TraceFP_select(handles);
-            if (length(pinds) == 1 || pinds(1) <= 0)
-                fprintf(['[TraceFP]\t\tExit point selection.\n']);
-                return;
-            elseif(length(unique(pinds(1:i))) < i || any(pinds(1:i) <= 0))
-                fprintf(['[TraceFP]\t\tSelected invalid point, ', ...
-                'exiting rectangle creation.\n']);
-                return;
-            else
-                i=i+1;
-            end
-        end
-
-        % check for invalid
-        if(length(unique(pinds)) < 3 || any(isempty(pinds)))
-            fprintf(['[TraceFP]\t\tFound repeated/invalid points, ', ...
-                    'discarding selection.\n']);
-            return;
-        end
-
-        % check if first triangle oriented correctly
-        orient = det([ 	(handles.control_points(pinds(1),:) ...
-                    - handles.control_points(pinds(3),:)) ;
-                (handles.control_points(pinds(2),:) ...
-                    - handles.control_points(pinds(3),:)) ]);
-        if(orient < 0)
-            fprintf('[TraceFP]\t\treordering to be counterclockwise\n');
-            pinds = fliplr(pinds);
+        pinds = TraceFP_select(handles);
+        if (numel(pinds)<3)
+            fprintf(['[TraceFP]\t\tInsufficient points selected.', ...
+                ' Exiting construct new polygon function.\n']);
+            return
         end
         
-        new_point=TraceFP_select(handles);
-        
-        % check whether new_point is inside triangle created by 
-        % first 3 points
-        triangle_coordinates=[handles.control_points(pinds(1),:);...
-            handles.control_points(pinds(2),:); ...
-            handles.control_points(pinds(3),:)];
-        triangle_xv=triangle_coordinates(:,1);
-        triangle_yv=triangle_coordinates(:,2);
-        if (new_point<=0 || inpolygon(handles.control_points(new_point, 1), ...
-                handles.control_points(new_point, 2), ...
-                triangle_xv, ...
-                triangle_yv))
-            % add the triangle
-            handles.triangles = [handles.triangles; pinds];
-            fprintf('[TraceFP]\t\tadded new triangle\n');
-            handles.room_ids = [handles.room_ids ; handles.current_room];
-            % render and save data
-            TraceFP_render(hObject, handles, false);
-            handles=guidata(hObject);
-            global undo_history redo_history
-            undo_history.push_back(handles);
-            redo_history.clear();
-            continue;
+        coordinates = [];
+        xV = [];
+        yV = [];
+        for idx=1:numel(pinds)
+            xV = [xV; handles.control_points(pinds(idx), 1)];
+            yV = [yV; handles.control_points(pinds(idx), 2)];
         end
         
-        % find second triangle
-        second_pinds=[];
-        i=1;
-        x=handles.control_points(new_point, 1);
-        y=handles.control_points(new_point, 2);
-        triangle_line_x = [handles.control_points(pinds(1), 1), ...
-                handles.control_points(pinds(2), 1), ...
-                handles.control_points(pinds(3), 1), ...
-                handles.control_points(pinds(1), 1)];
-        triangle_line_y = [handles.control_points(pinds(1), 2), ...
-            handles.control_points(pinds(2), 2), ...
-            handles.control_points(pinds(3), 2), ...
-            handles.control_points(pinds(1), 2)];
-        while (i<4 && numel(second_pinds) ~= 2)
-            % if there is no intersection, i.e. xi is empty
-            % this target is a correct point
-            xV=[x, handles.control_points(pinds(i), 1)];
-            yV=[y, handles.control_points(pinds(i), 2)];
-            [xi, yi] = polyxpoly(xV, yV, ...
-                triangle_line_x, triangle_line_y, 'unique');
-            if (numel(xi)==1)
-                second_pinds=[second_pinds, pinds(i)];
-            end
-            i = i + 1;
-        end
-        if (numel(second_pinds) ~= 2)
-            fprintf('[TraceFP]\t\tinvalid rectangle selected. exiting.\n');
-            return;
-        else
-            second_pinds=[second_pinds, new_point];
-        end        
-        
+        new_triangles = pinds(delaunay(xV, yV));
         % check if second triangle oriented correctly
-        orient = det([ 	(handles.control_points(second_pinds(1),:) ...
-                    - handles.control_points(second_pinds(3),:)) ;
-                (handles.control_points(second_pinds(2),:) ...
-                    - handles.control_points(second_pinds(3),:)) ]);
-        if(orient < 0)
-            fprintf('[TraceFP]\t\treordering to be counterclockwise\n');
-            second_pinds = fliplr(second_pinds);
+        for idx=1:size(new_triangles,1)
+            triangle_pinds = new_triangles(idx,:);
+            orient = det([(handles.control_points(triangle_pinds(1),:) ...
+                        - handles.control_points(triangle_pinds(3),:)) ;
+                    (handles.control_points(triangle_pinds(2),:) ...
+                        - handles.control_points(triangle_pinds(3),:)) ]);
+            if(orient < 0)
+                new_triangles(idx, :) = fliplr(triangle_pinds);
+            end
         end
-        
-        % add first triangle
-        handles.triangles = [handles.triangles; pinds];
-        fprintf('[TraceFP]\t\tadded new triangle\n');
-        handles.room_ids = [handles.room_ids ; handles.current_room];
-        
-        % add second triangle
-        handles.triangles = [handles.triangles; second_pinds];
-        fprintf('[TraceFP]\t\tadded new triangle\n');
-        handles.room_ids = [handles.room_ids ; handles.current_room];
+        % add triangles
+        handles.triangles = [handles.triangles; new_triangles]; 
+        handles.room_ids = [handles.room_ids; ...
+            repmat(handles.current_room, size(new_triangles, 1), 1)];
 
         % render and save data
         TraceFP_render(hObject, handles, false);
@@ -1020,6 +934,11 @@ function merge_points_ClickedCallback(hObject, eventdata, handles)
 % hObject    handle to test (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
+% will merge points in second selection (to be removed)
+% to points in first selection (point to be kept and merged into)
+% if any point in second selection is not connected to points in 
+% first selection, unexpected outcome might happen in some  
+% circumstances
     while (true)
         fprintf('[TraceFP]\tmerging points...\n');
 

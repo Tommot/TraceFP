@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 27-Mar-2015 01:23:10
+% Last Modified by GUIDE v2.5 27-Mar-2015 01:30:19
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -136,7 +136,7 @@ function TraceFP_OpeningFcn(hObject, eventdata, handles, varargin)
     g(g==255)=5.5*255;
     set(handles.clear,'CData',g);
     
-    DEBUGGING = true;
+    DEBUGGING = false;
     if (DEBUGGING)
         fp = read_fp(fullfile('/Users/tomlai/Documents/Projects/TraceFP/sample/mulford2/mulfordf2_gen1_s0.01.fp'));
         handles.control_points = fp.verts;
@@ -601,7 +601,7 @@ function open_fp_ClickedCallback(hObject, eventdata, handles)
     global undo_history redo_history
     undo_history.push_back(handles);
     redo_history.clear();
-	fprintf('[TraceFP]\t\tDONE\n.');
+	fprintf('[TraceFP]\t\tDONE\n');
 
 
 % --- Executes on button press in button New Polygon.
@@ -685,7 +685,7 @@ function clear_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function undo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to refresh (see GCBO)
+% hObject    handle to align_lines (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history 
@@ -707,7 +707,7 @@ function undo_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function redo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to refresh (see GCBO)
+% hObject    handle to align_lines (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history
@@ -727,7 +727,7 @@ function redo_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to refresh (see GCBO)
+% hObject    handle to align_lines (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -761,7 +761,7 @@ function fit_to_line_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to refresh (see GCBO)
+% hObject    handle to align_lines (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -830,7 +830,7 @@ function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to refresh (see GCBO)
+% hObject    handle to align_lines (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -839,13 +839,9 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
         line = [];
         for i=1:2
             [X,Y,BUTTON] = myginput(1, 'crosshair');
-%             result = TraceFP_select(handles);
             if (BUTTON~=1)
                 fprintf('[TraceFP]\t\tNo point selected. Exiting line fitting.\n');
                 return;
-%             elseif (numel(result) > 1)
-%                 result = result(1);
-%             end
             else
                 line = [line; X, Y];
             end
@@ -860,12 +856,6 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
         end
         
         % calculate polynomial for the line
-%         line_coordinates = zeros(0,2);
-%         for i=1:numel(line)
-%             line_coordinates = [line_coordinates; ...
-%                 handles.control_points(line(i), :)];
-%         end
-%         P = polyfit(line_coordinates(:,1),line_coordinates(:,2),1);
         P = polyfit(line(:,1),line(:,2),1);
         
         % obtain coordinates of the points to fit
@@ -892,7 +882,7 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to refresh (see GCBO)
+% hObject    handle to align_lines (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % WARNING: this function will remove all dangling control points
@@ -934,7 +924,7 @@ function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function merge_points_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to refresh (see GCBO)
+% hObject    handle to align_lines (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % will merge points in second selection (to be removed)
@@ -973,7 +963,7 @@ function merge_points_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function add_point_to_room_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to refresh (see GCBO)
+% hObject    handle to align_lines (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -1079,7 +1069,7 @@ function add_point_to_room_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function refresh_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to refresh (see GCBO)
+% hObject    handle to align_lines (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     handles = TraceFP_validate_fp(handles);
@@ -1089,4 +1079,69 @@ function refresh_ClickedCallback(hObject, eventdata, handles)
     undo_history.push_back(handles);
     redo_history.clear(); 
     fprintf('[TraceFP]\tfloorplan validated and refreshed\n');
+    
+
+
+% --------------------------------------------------------------------
+function align_lines_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to align_lines (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    tolerance = 10; % degree
+    thershold = 1; % degree to stop recursive fixing
+    fprintf('[TraceFP]\talign lines to direction...\n');
+    [X1,Y1,BUTTON] = myginput(1, 'crosshair');
+    if (BUTTON~=1)
+        fprintf('[TraceFP]\t\tNo point selected. Exiting line aligning.\n');
+        return;
+    end
+    [X2,Y2,BUTTON] = myginput(1, 'crosshair');
+    if (BUTTON~=1)
+        fprintf('[TraceFP]\t\tNo point selected. Exiting line aligning.\n');
+        return;
+    end
+    V = [X2-X1, Y2-Y1];
+    change = true;
+    while (change)
+        change = false;
+        for pind1=1:size(handles.control_points,1)
+            for pind2=1:size(handles.control_points,1)
+                if (pind1 >= pind2)
+                    continue;
+                else
+                    point_1_map = any(handles.triangles==pind1,2);
+                    point_2_map = any(handles.triangles==pind2,2);
+                    line_exist = any(point_1_map & point_2_map);
+                    if (line_exist)
+                        line = [ ...
+                            handles.control_points(pind1,1)-handles.control_points(pind2,1), ...
+                            handles.control_points(pind1,2)-handles.control_points(pind2,2)];
+                        % <u,v> = |u|*|v|*cos(theta)
+                        cosine_value = dot(V, line) / (norm(V) * norm(line));
+                        theta = acosd(cosine_value);
+                        if ((theta < tolerance && theta > thershold) || ...
+                                (theta > 180-tolerance && theta < 180-thershold))
+                            change = true;
+                            mid_point = 0.5 * [...
+                                handles.control_points(pind1,1)+handles.control_points(pind2,1), ...
+                                handles.control_points(pind1,2)+handles.control_points(pind2,2)];
+                            line_on_mid_point = [mid_point; mid_point + V];
+                            P = polyfit(line_on_mid_point(:,1),line_on_mid_point(:,2),1);
+                            new_pind1_coordinate = projectPointToLine(handles.control_points(pind1,:), P);
+                            new_pind2_coordinate = projectPointToLine(handles.control_points(pind2,:), P);
+                            handles.control_points(pind1, :) = new_pind1_coordinate;
+                            handles.control_points(pind2, :) = new_pind2_coordinate;
+                        end
+                    end
+                end
+            end
+        end
+    end
+    handles = TraceFP_validate_fp(handles);
+    TraceFP_render(hObject, handles, false);
+    handles=guidata(hObject);
+    global undo_history redo_history
+    undo_history.push_back(handles);
+    redo_history.clear(); 
+    fprintf('[TraceFP]\tfloorplan aligned to selected direction\n');
     

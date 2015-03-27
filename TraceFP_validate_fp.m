@@ -103,9 +103,11 @@ function handles = TraceFP_validate_fp( handles )
     % this piece of code will try to enforce consistency on
     % handles.triangles and handles.room_ids
     while (size(handles.triangles, 1) > numel(handles.room_ids))
+        fprintf('[TraceFP]\t\tWARNING: inconsistency: triangles list > room id list...\n');
         handles.triangles(size(handles.triangles, 1),:) = [];
     end
     while (size(handles.triangles, 1) < numel(handles.room_ids))
+        fprintf('[TraceFP]\t\tWARNING: inconsistency: triangles list < room id list...\n');
         handles.room_ids(numel(handles.room_ids))=[];
     end
 end

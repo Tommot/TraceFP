@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 23-Mar-2015 18:38:33
+% Last Modified by GUIDE v2.5 27-Mar-2015 01:23:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -642,8 +642,8 @@ function new_polygon_clicked_Callback(hObject, eventdata, handles)
         end
         % add triangles
         handles.triangles = [handles.triangles; new_triangles]; 
-        handles.room_ids = [handles.room_ids; ...
-            repmat(handles.current_room, size(new_triangles, 1), 1)];
+        handles.room_ids = [handles.room_ids, ...
+            repmat(handles.current_room, [1, size(new_triangles, 1)])];
 
         % render and save data
         TraceFP_render(hObject, handles, false);
@@ -685,7 +685,7 @@ function clear_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function undo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to test (see GCBO)
+% hObject    handle to refresh (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history 
@@ -707,7 +707,7 @@ function undo_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function redo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to test (see GCBO)
+% hObject    handle to refresh (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history
@@ -727,7 +727,7 @@ function redo_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to test (see GCBO)
+% hObject    handle to refresh (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -761,7 +761,7 @@ function fit_to_line_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to test (see GCBO)
+% hObject    handle to refresh (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -830,7 +830,7 @@ function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to test (see GCBO)
+% hObject    handle to refresh (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -838,14 +838,17 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
         fprintf('[TraceFP]\tselect points of designated line...\n');
         line = [];
         for i=1:2
-            result = TraceFP_select(handles);
-            if (result==0)
+            [X,Y,BUTTON] = myginput(1, 'crosshair');
+%             result = TraceFP_select(handles);
+            if (BUTTON~=1)
                 fprintf('[TraceFP]\t\tNo point selected. Exiting line fitting.\n');
                 return;
-            elseif (numel(result) > 1)
-                result = result(1);
+%             elseif (numel(result) > 1)
+%                 result = result(1);
+%             end
+            else
+                line = [line; X, Y];
             end
-            line = [line, result];
         end
         
         fprintf('[TraceFP]\tselect points to fit to the line...\n');
@@ -857,12 +860,13 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
         end
         
         % calculate polynomial for the line
-        line_coordinates = zeros(0,2);
-        for i=1:numel(line)
-            line_coordinates = [line_coordinates; ...
-                handles.control_points(line(i), :)];
-        end
-        P = polyfit(line_coordinates(:,1),line_coordinates(:,2),1);
+%         line_coordinates = zeros(0,2);
+%         for i=1:numel(line)
+%             line_coordinates = [line_coordinates; ...
+%                 handles.control_points(line(i), :)];
+%         end
+%         P = polyfit(line_coordinates(:,1),line_coordinates(:,2),1);
+        P = polyfit(line(:,1),line(:,2),1);
         
         % obtain coordinates of the points to fit
         points_coordinates = zeros(0,2);
@@ -888,7 +892,7 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to test (see GCBO)
+% hObject    handle to refresh (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % WARNING: this function will remove all dangling control points
@@ -899,7 +903,7 @@ function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
     fprintf('[TraceFP]\tmerging nearby points...\n');
     Y=pdist(handles.control_points);
     Z=linkage(Y);
-    thershold=0.5;
+    thershold=0.1;
     label = cluster(Z,'cutoff', thershold);
     
     % first create centroid point and redirect all edges to the new points
@@ -930,7 +934,7 @@ function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function merge_points_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to test (see GCBO)
+% hObject    handle to refresh (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % will merge points in second selection (to be removed)
@@ -969,7 +973,7 @@ function merge_points_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function add_point_to_room_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to test (see GCBO)
+% hObject    handle to refresh (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -1071,3 +1075,18 @@ function add_point_to_room_ClickedCallback(hObject, eventdata, handles)
         redo_history.clear(); 
         fprintf('[TraceFP]\tDONE inserting new point for current room\n');
     end
+
+
+% --------------------------------------------------------------------
+function refresh_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to refresh (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    handles = TraceFP_validate_fp(handles);
+    TraceFP_render(hObject, handles, false);
+    handles=guidata(hObject);
+    global undo_history redo_history
+    undo_history.push_back(handles);
+    redo_history.clear(); 
+    fprintf('[TraceFP]\tfloorplan validated and refreshed\n');
+    

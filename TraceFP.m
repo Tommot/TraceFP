@@ -1073,7 +1073,7 @@ function refresh_ClickedCallback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     handles = TraceFP_validate_fp(handles);
-    TraceFP_render(hObject, handles, false);
+    TraceFP_render(hObject, handles, true);
     handles=guidata(hObject);
     global undo_history redo_history
     undo_history.push_back(handles);

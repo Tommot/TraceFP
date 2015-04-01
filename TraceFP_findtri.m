@@ -8,6 +8,9 @@ function ind = TraceFP_findtri(handles)
 	% written by Eric Turner <elturner@eecs.berkeley.edu>
 	% created on February 9, 2015
 	%
+    
+    % avoid double selection with pan
+    pan OFF;
 
 	% initially set to be invalid
 	ind = -1;

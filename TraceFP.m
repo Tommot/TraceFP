@@ -1088,7 +1088,6 @@ function align_lines_ClickedCallback(hObject, eventdata, handles)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     tolerance = 10; % degree
-    thershold = 1; % degree to stop recursive fixing
     fprintf('[TraceFP]\talign lines to direction...\n');
     [X1,Y1,BUTTON] = myginput(1, 'crosshair');
     if (BUTTON~=1)
@@ -1100,43 +1099,63 @@ function align_lines_ClickedCallback(hObject, eventdata, handles)
         fprintf('[TraceFP]\t\tNo point selected. Exiting line aligning.\n');
         return;
     end
-    V = [X2-X1, Y2-Y1];
-    change = true;
-    while (change)
-        change = false;
-        for pind1=1:size(handles.control_points,1)
-            for pind2=1:size(handles.control_points,1)
-                if (pind1 >= pind2)
-                    continue;
-                else
-                    point_1_map = any(handles.triangles==pind1,2);
-                    point_2_map = any(handles.triangles==pind2,2);
-                    line_exist = any(point_1_map & point_2_map);
-                    if (line_exist)
-                        line = [ ...
-                            handles.control_points(pind1,1)-handles.control_points(pind2,1), ...
-                            handles.control_points(pind1,2)-handles.control_points(pind2,2)];
-                        % <u,v> = |u|*|v|*cos(theta)
-                        cosine_value = dot(V, line) / (norm(V) * norm(line));
-                        theta = acosd(cosine_value);
-                        if ((theta < tolerance && theta > thershold) || ...
-                                (theta > 180-tolerance && theta < 180-thershold))
-                            change = true;
-                            mid_point = 0.5 * [...
-                                handles.control_points(pind1,1)+handles.control_points(pind2,1), ...
-                                handles.control_points(pind1,2)+handles.control_points(pind2,2)];
-                            line_on_mid_point = [mid_point; mid_point + V];
-                            P = polyfit(line_on_mid_point(:,1),line_on_mid_point(:,2),1);
-                            new_pind1_coordinate = projectPointToLine(handles.control_points(pind1,:), P);
-                            new_pind2_coordinate = projectPointToLine(handles.control_points(pind2,:), P);
-                            handles.control_points(pind1, :) = new_pind1_coordinate;
-                            handles.control_points(pind2, :) = new_pind2_coordinate;
-                        end
+    target_vector = [X2-X1, Y2-Y1];
+    aligned_points = [];
+    while (numel(aligned_points) < size(handles.control_points,1))
+        % get first unaligned point
+        pind = 1;
+        while (any(aligned_points==pind))
+            pind = pind + 1;
+        end
+        
+        % get all points in the same line
+        current_cluster_pind = [pind];
+        pind2 = 1;
+        while pind2 <= size(handles.control_points,1)
+            if (any(current_cluster_pind==pind2))
+                pind2 = pind2+1;
+                continue;
+            end
+            for idx = 1:numel(current_cluster_pind)
+                pind1 = current_cluster_pind(idx);
+                point_1_map = any(handles.triangles==pind1,2);
+                point_2_map = any(handles.triangles==pind2,2);
+                line_exist = any(point_1_map & point_2_map);
+                if (line_exist)
+                    line = [handles.control_points(pind1,1) ...
+                                - handles.control_points(pind2,1), ...
+                            handles.control_points(pind1,2) ...
+                                - handles.control_points(pind2,2)];
+                    if (is_parallel(target_vector, line, tolerance))
+                        current_cluster_pind = [current_cluster_pind, pind2];
+                        pind2=1;
+                        break;
                     end
                 end
             end
+            pind2 = pind2+1;
         end
+        
+        % process current cluster
+        mid_point = [0,0];
+        for idx = 1:numel(current_cluster_pind)
+            iter_pind = current_cluster_pind(idx);
+            mid_point = [mid_point(1)+handles.control_points(iter_pind,1), ...
+                         mid_point(2)+handles.control_points(iter_pind,2)];
+        end
+        mid_point = mid_point / numel(current_cluster_pind);
+        line_on_mid_point = [mid_point; mid_point + target_vector];
+        P = polyfit(line_on_mid_point(:,1),line_on_mid_point(:,2),1);
+        for idx = 1:numel(current_cluster_pind)
+            iter_pind = current_cluster_pind(idx);
+            handles.control_points(iter_pind, :) = ...
+                projectPointToLine(handles.control_points(iter_pind,:), P);
+        end
+        
+        % mark current cluster's points as done
+        aligned_points = [aligned_points, current_cluster_pind];
     end
+
     handles = TraceFP_validate_fp(handles);
     TraceFP_render(hObject, handles, false);
     handles=guidata(hObject);

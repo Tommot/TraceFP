@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 27-Mar-2015 01:30:19
+% Last Modified by GUIDE v2.5 31-Mar-2015 21:16:11
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -70,6 +70,10 @@ function TraceFP_OpeningFcn(hObject, eventdata, handles, varargin)
 
 	% Choose default command line output for TraceFP
 	handles.output = hObject;
+    
+    % set constraints for functions
+    % set tolerance for aligning lines function
+    handles.align_line_tolerance = 10;
 
 	% Update handles structure
 	guidata(hObject, handles);
@@ -685,7 +689,7 @@ function clear_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function undo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to align_lines (see GCBO)
+% hObject    handle to set_constraints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history 
@@ -701,13 +705,14 @@ function undo_ClickedCallback(hObject, eventdata, handles)
     handles.wall_samples = undo_history.tail.wall_samples;
     handles.room_ids = undo_history.tail.room_ids;
     handles.current_room = undo_history.tail.current_room;
+    handles.align_line_tolerance = undo_history.tail.align_line_tolerance;
     delete(node);
     TraceFP_render(hObject, handles, false);
 
 
 % --------------------------------------------------------------------
 function redo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to align_lines (see GCBO)
+% hObject    handle to set_constraints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history
@@ -721,13 +726,14 @@ function redo_ClickedCallback(hObject, eventdata, handles)
     handles.wall_samples = undo_history.tail.wall_samples;
     handles.room_ids = undo_history.tail.room_ids;
     handles.current_room = undo_history.tail.current_room;
+    handles.align_line_tolerance = undo_history.tail.align_line_tolerance;
     delete(node);
     TraceFP_render(hObject, handles, false);
 
 
 % --------------------------------------------------------------------
 function fit_to_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to align_lines (see GCBO)
+% hObject    handle to set_constraints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -761,7 +767,7 @@ function fit_to_line_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to align_lines (see GCBO)
+% hObject    handle to set_constraints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -830,7 +836,7 @@ function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to align_lines (see GCBO)
+% hObject    handle to set_constraints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -882,7 +888,7 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to align_lines (see GCBO)
+% hObject    handle to set_constraints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % WARNING: this function will remove all dangling control points
@@ -924,7 +930,7 @@ function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function merge_points_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to align_lines (see GCBO)
+% hObject    handle to set_constraints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % will merge points in second selection (to be removed)
@@ -963,7 +969,7 @@ function merge_points_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function add_point_to_room_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to align_lines (see GCBO)
+% hObject    handle to set_constraints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -1069,7 +1075,7 @@ function add_point_to_room_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function refresh_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to align_lines (see GCBO)
+% hObject    handle to set_constraints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     handles = TraceFP_validate_fp(handles);
@@ -1084,10 +1090,10 @@ function refresh_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function align_lines_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to align_lines (see GCBO)
+% hObject    handle to set_constraints (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    tolerance = 10; % degree
+    tolerance = handles.align_line_tolerance; % degree
     fprintf('[TraceFP]\talign lines to direction...\n');
     [X1,Y1,BUTTON] = myginput(1, 'crosshair');
     if (BUTTON~=1)
@@ -1164,3 +1170,29 @@ function align_lines_ClickedCallback(hObject, eventdata, handles)
     redo_history.clear(); 
     fprintf('[TraceFP]\tfloorplan aligned to selected direction\n');
     
+
+    
+
+
+% --------------------------------------------------------------------
+function set_constraints_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to set_constraints (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    name='Set constraints';
+    prompt={'Tolerance (angle) for aligning lines:'};
+    numlines=1;
+    defaultanswer={num2str(handles.align_line_tolerance)};
+    options.WindowStyle='modal';
+    answer=inputdlg(prompt,name,numlines,defaultanswer,options);
+    new_tolerance_align_lines = str2num(answer{1});
+    if (~isempty(new_tolerance_align_lines))
+        handles.align_line_tolerance = new_tolerance_align_lines;
+    end
+    
+    % save result
+    guidata(hObject,handles)
+    global undo_history redo_history
+    undo_history.push_back(handles);
+    redo_history.clear(); 
+        

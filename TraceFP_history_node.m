@@ -8,6 +8,7 @@ classdef TraceFP_history_node < handle
         triangles
         room_ids
         current_room
+        align_line_tolerance
         next
         prev
     end
@@ -20,6 +21,7 @@ classdef TraceFP_history_node < handle
                 obj.triangles = handles.triangles;
                 obj.room_ids = handles.room_ids;
                 obj.current_room = handles.current_room;
+                obj.align_line_tolerance = handles.align_line_tolerance;
                 obj.next = 0;
                 obj.prev = 0; 
             end

@@ -1,6 +1,7 @@
 function bool = is_parallel( v1, v2, tolerance )
 %IS_PARALLEL Summary of this function goes here
 %   Detailed explanation goes here
+%   is_parallel( v1, v2, tolerance )
 %   v1: the first vector
 %   v2: the second vector
 %   thershold: the maximum inclined angle to count the two lines as

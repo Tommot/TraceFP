@@ -1,8 +1,8 @@
 function ind = TraceFP_select(handles)
 	% ind = TraceFP_select(handles)
 	%
-	%	Selects a single control point via the mouse
-	%
+	%   return a list of control points via the cursor lasso selection
+	%   return 0 if nothing is selected
     
     % avoid double selection with pan
     pan OFF;

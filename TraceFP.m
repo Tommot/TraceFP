@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 31-Mar-2015 21:16:11
+% Last Modified by GUIDE v2.5 09-Apr-2015 17:25:10
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -168,7 +168,7 @@ function varargout = TraceFP_OutputFcn(hObject, eventdata, handles)
 
 % --- Executes on button press in show_wall_samples.
 function show_wall_samples_Callback(hObject, eventdata, handles)
-% hObject    handle to show_wall_samples (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -186,7 +186,7 @@ function show_wall_samples_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in show_control_points.
 function show_control_points_Callback(hObject, eventdata, handles)
-% hObject    handle to show_control_points (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -205,7 +205,7 @@ function show_control_points_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in show_floorplan.
 function show_floorplan_Callback(hObject, eventdata, handles)
-% hObject    handle to show_floorplan (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -223,7 +223,7 @@ function show_floorplan_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in new_triangle.
 function new_triangle_Callback(hObject, eventdata, handles)
-% hObject    handle to new_triangle (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -259,7 +259,9 @@ function new_triangle_Callback(hObject, eventdata, handles)
         fprintf('[TraceFP]\t\tadded new triangle\n');
 
         % update rendering
-        handles.room_ids = [handles.room_ids ; handles.current_room];
+        handles.room_ids
+        handles.current_room
+        handles.room_ids = [handles.room_ids; handles.current_room];
 
         % render and save data
         TraceFP_render(hObject, handles, false);
@@ -273,7 +275,7 @@ function new_triangle_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in remove_triangle.
 function remove_triangle_Callback(hObject, eventdata, handles)
-% hObject    handle to remove_triangle (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     
@@ -305,7 +307,7 @@ function remove_triangle_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in set_room.
 function set_room_Callback(hObject, eventdata, handles)
-% hObject    handle to set_room (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -348,7 +350,7 @@ function set_room_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in new_point.
 function new_point_Callback(hObject, eventdata, handles)
-% hObject    handle to new_point (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 	% get new point
@@ -374,7 +376,7 @@ function new_point_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in merge_and_move_point.
 function merge_and_move_point_Callback(hObject, eventdata, handles)
-% hObject    handle to merge_and_move_point (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -414,7 +416,7 @@ function merge_and_move_point_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in remove_point.
 function remove_point_Callback(hObject, eventdata, handles)
-% hObject    handle to remove_point (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -457,7 +459,7 @@ function remove_point_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function open_wall_samples_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to open_wall_samples (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -484,7 +486,7 @@ function open_wall_samples_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function save_fp_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to save_fp (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -520,7 +522,7 @@ function save_fp_ClickedCallback(hObject, eventdata, handles)
 
 % --- Executes on button press in update_triangle_room.
 function update_triangle_room_Callback(hObject, eventdata, handles)
-% hObject    handle to update_triangle_room (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     
@@ -571,7 +573,7 @@ function update_triangle_room_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function open_fp_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to open_fp (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -610,7 +612,7 @@ function open_fp_ClickedCallback(hObject, eventdata, handles)
 
 % --- Executes on button press in button New Polygon.
 function new_polygon_clicked_Callback(hObject, eventdata, handles)
-% hObject    handle to new_polygon (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -646,8 +648,8 @@ function new_polygon_clicked_Callback(hObject, eventdata, handles)
         end
         % add triangles
         handles.triangles = [handles.triangles; new_triangles]; 
-        handles.room_ids = [handles.room_ids, ...
-            repmat(handles.current_room, [1, size(new_triangles, 1)])];
+        handles.room_ids = [handles.room_ids; ...
+            repmat(handles.current_room, [size(new_triangles, 1), 1])];
 
         % render and save data
         TraceFP_render(hObject, handles, false);
@@ -660,7 +662,7 @@ function new_polygon_clicked_Callback(hObject, eventdata, handles)
 
 % --- Executes on button press in clear.
 function clear_Callback(hObject, eventdata, handles)
-% hObject    handle to clear (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     answer = questdlg(['All current points, triangles, labels will be removed. ', ...
@@ -689,7 +691,7 @@ function clear_Callback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function undo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to set_constraints (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history 
@@ -712,7 +714,7 @@ function undo_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function redo_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to set_constraints (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     global redo_history undo_history
@@ -733,7 +735,7 @@ function redo_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to set_constraints (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -767,7 +769,7 @@ function fit_to_line_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to set_constraints (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -836,7 +838,7 @@ function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to set_constraints (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     while (true)
@@ -888,7 +890,7 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to set_constraints (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % WARNING: this function will remove all dangling control points
@@ -930,7 +932,7 @@ function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function merge_points_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to set_constraints (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 % will merge points in second selection (to be removed)
@@ -969,7 +971,7 @@ function merge_points_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function add_point_to_room_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to set_constraints (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
 
@@ -1075,7 +1077,7 @@ function add_point_to_room_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function refresh_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to set_constraints (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     handles = TraceFP_validate_fp(handles);
@@ -1090,7 +1092,7 @@ function refresh_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function align_lines_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to set_constraints (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     tolerance = handles.align_line_tolerance; % degree
@@ -1176,10 +1178,10 @@ function align_lines_ClickedCallback(hObject, eventdata, handles)
 
 % --------------------------------------------------------------------
 function set_constraints_ClickedCallback(hObject, eventdata, handles)
-% hObject    handle to set_constraints (see GCBO)
+% hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    name='Set constraints';
+    name='Set constraints';~m1
     prompt={'Tolerance (angle) for aligning lines:'};
     numlines=1;
     defaultanswer={num2str(handles.align_line_tolerance)};
@@ -1196,3 +1198,66 @@ function set_constraints_ClickedCallback(hObject, eventdata, handles)
     undo_history.push_back(handles);
     redo_history.clear(); 
         
+
+
+% --------------------------------------------------------------------
+function remove_point_from_polygon_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to figure (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    fprintf('[TraceFP]\tselect points to be removed from any room\n');
+    pinds_to_be_removed = sort(TraceFP_select(handles))
+    if (pinds_to_be_removed == 0)
+        fprintf('[TraceFP]\tNo points selected. Exiting remove point from room tool\n');
+        return ;
+    end
+    for pinds_to_be_removed_idx = numel(pinds_to_be_removed):-1:1
+        pind = pinds_to_be_removed(pinds_to_be_removed_idx);
+        triangles_idx_to_remove = any(handles.triangles==pind,2);
+        mapped_triangles = handles.triangles(triangles_idx_to_remove,:);
+        room_id = handles.room_ids(triangles_idx_to_remove);
+        room_id = room_id(1);
+        handles.room_ids(triangles_idx_to_remove,:) = [];
+        handles.triangles(triangles_idx_to_remove,:) = [];
+        % construct all the counterclockwise lines
+        lines = [];
+        for row_idx = 1:size(mapped_triangles,1)
+            row = mapped_triangles(row_idx,:);
+            while row(1) ~= pind
+                row = circshift(row, 1, 2);
+            end
+            lines = [lines; row(2:3)];
+        end
+        % iterate through the point counterclockwise to get the
+        % entire polygon
+        polygon = [lines(1,:)];
+        while polygon(1) ~= polygon(size(polygon,2))
+            point_to_include = polygon(1);
+            point_to_not_include = polygon(2);
+            selected_line = lines(any(lines==point_to_include,2),:);
+            selected_line = selected_line(...
+                all(selected_line~=point_to_not_include,2),:);
+            polygon = [selected_line(1), polygon];
+        end
+        P_pind = polygon(2:numel(polygon));
+        P = handles.control_points(P_pind,:);
+        N = numel(P_pind);
+        C = [(1:(N-1))' (2:N)'; N 1];
+        DT = delaunayTriangulation(P,C);
+        new_triangles = P_pind(DT.ConnectivityList(isInterior(DT),:));
+        handles.triangles = [handles.triangles; new_triangles];
+        handles.room_ids = [handles.room_ids; ...
+            repmat(room_id, [size(new_triangles, 1), 1])];
+        idx = [[1:pind] [pind:size(handles.control_points,1)]];
+        handles.triangles = idx( handles.triangles );
+        pinds_to_be_removed = idx(pinds_to_be_removed);
+        handles.control_points(pind,:)=[];
+    end
+    handles = TraceFP_validate_fp(handles);
+    TraceFP_render(hObject, handles, false);
+    handles=guidata(hObject);
+    global undo_history redo_history
+    undo_history.push_back(handles);
+    redo_history.clear(); 
+    fprintf('[TraceFP]\tpoints removed from room\n');
+    

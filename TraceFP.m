@@ -1181,7 +1181,7 @@ function set_constraints_ClickedCallback(hObject, eventdata, handles)
 % hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    name='Set constraints';~m1
+    name='Set constraints';
     prompt={'Tolerance (angle) for aligning lines:'};
     numlines=1;
     defaultanswer={num2str(handles.align_line_tolerance)};

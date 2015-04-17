@@ -1205,8 +1205,44 @@ function remove_point_from_polygon_ClickedCallback(hObject, eventdata, handles)
 % hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
-    fprintf('[TraceFP]\tselect points to be removed from any room\n');
-    pinds_to_be_removed = sort(TraceFP_select(handles))
+
+    fprintf('[TraceFP]\tauto-select points to be removed from any room\n');
+    final_points = [];
+    for room_id = 1:max(handles.room_ids)
+        room_idx = handles.room_ids==room_id;
+        triangles = handles.triangles(room_idx, :);
+        tmp_edges_for_room = [];
+        for triangleIdx=1:size(triangles,1)
+            triangle = triangles(triangleIdx, :);
+            edge1=triangle(1:2);
+            edge2=triangle(2:3);
+            edge3=[triangle(3),triangle(1)];
+            edges = [edge1; edge2; edge3];
+            for edgeIdx=1:3
+                edge = edges(edgeIdx, :);
+                if numel(tmp_edges_for_room)==0
+                    tmp_edges_for_room = [tmp_edges_for_room; edge];
+                    continue;
+                end
+                inverted_match = tmp_edges_for_room(:,2)==edge(1) & ...
+                                    tmp_edges_for_room(:,1)==edge(2);
+                if any(inverted_match)
+                    tmp_edges_for_room(inverted_match, :)=[];
+                    continue;
+                end
+                tmp_edges_for_room = [tmp_edges_for_room; edge];
+            end
+        end
+        final_points = unique([final_points; unique(tmp_edges_for_room)]);
+    end
+    points_to_not_include=unique(final_points);
+    pinds_to_be_removed = [];
+    for i=1:size(handles.control_points,1)
+        if any(points_to_not_include==i)
+            continue;
+        end
+        pinds_to_be_removed = [pinds_to_be_removed,i];
+    end
     if (pinds_to_be_removed == 0)
         fprintf('[TraceFP]\tNo points selected. Exiting remove point from room tool\n');
         return ;

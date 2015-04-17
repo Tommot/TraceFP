@@ -15,7 +15,7 @@ function varargout = TraceFP(varargin)
 
 % Edit the above text to modify the response to help TraceFP
 
-% Last Modified by GUIDE v2.5 09-Apr-2015 17:25:10
+% Last Modified by GUIDE v2.5 17-Apr-2015 01:19:24
 
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
@@ -1297,3 +1297,69 @@ function remove_point_from_polygon_ClickedCallback(hObject, eventdata, handles)
     redo_history.clear(); 
     fprintf('[TraceFP]\tpoints removed from room\n');
     
+
+
+% --------------------------------------------------------------------
+function split_triangle_ClickedCallback(hObject, eventdata, handles)
+% hObject    handle to split_triangle (see GCBO)
+% eventdata  reserved - to be defined in a future version of MATLAB
+% handles    structure with handles and user data (see GUIDATA)
+    while (true)
+        fprintf('[TraceFP]\tSelect a point to split a triangle...\n');
+        pan OFF;
+        [X,Y, BUTTON] = myginput(1, 'crosshair');
+        ind = -1;
+        N = size(handles.triangles,1);
+        if(N == 0)
+            fprintf('[TraceFp]\t\tNo triangles defined. Exiting.\n');
+            return;
+        end
+        if (BUTTON~=1)
+            return;
+        end
+        for i = 1:N
+            xV = handles.control_points(handles.triangles(i,:), 1);
+            yV = handles.control_points(handles.triangles(i,:), 2);
+            if(inpolygon(X, Y, xV, yV))
+                ind = i;
+                break;
+            end
+        end
+        if (ind==-1)
+            fprintf('[TraceFp]\t\tNo triangle selected. Exiting.\n');
+            return;
+        end
+        handles.control_points = [handles.control_points; X, Y];
+        xV = [xV; X];
+        yV = [yV; Y];
+        pinds = [handles.triangles(i,:), size(handles.control_points,1)];
+        new_triangles = pinds(delaunay(xV, yV));
+        % check if second triangle oriented correctly
+        for idx=1:size(new_triangles,1)
+            triangle_pinds = new_triangles(idx,:);
+            orient = det([(handles.control_points(triangle_pinds(1),:) ...
+                        - handles.control_points(triangle_pinds(3),:)) ;
+                    (handles.control_points(triangle_pinds(2),:) ...
+                        - handles.control_points(triangle_pinds(3),:)) ]);
+            if(orient < 0)
+                new_triangles(idx, :) = fliplr(triangle_pinds);
+            end
+        end
+        % add triangles
+        handles.triangles = [handles.triangles; new_triangles]; 
+        handles.room_ids = [handles.room_ids; ...
+            repmat(handles.room_ids(i), [size(new_triangles, 1), 1])];
+
+        % remove old triangle
+        handles.triangles(i,:) = [];
+        handles.room_ids(i) = [];
+
+        % render and save data
+        handles = TraceFP_validate_fp(handles);
+        TraceFP_render(hObject, handles, false);
+        handles=guidata(hObject);
+        global undo_history redo_history
+        undo_history.push_back(handles);
+        redo_history.clear();
+        fprintf('[TraceFp]\t\tPoint inserted to room.\n'); 
+    end

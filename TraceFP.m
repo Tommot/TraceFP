@@ -13,10 +13,6 @@ function varargout = TraceFP(varargin)
 %
 % See also: GUIDE, GUIDATA, GUIHANDLES
 
-% Edit the above text to modify the response to help TraceFP
-
-% Last Modified by GUIDE v2.5 17-Apr-2015 01:19:24
-
 % Begin initialization code - DO NOT EDIT
 gui_Singleton = 1;
 gui_State = struct('gui_Name',       mfilename, ...
@@ -51,12 +47,11 @@ function TraceFP_OpeningFcn(hObject, eventdata, handles, varargin)
 	% initialize handles structure
 	handles.wall_samples = []; % no wall samples yet
 	handles.control_points = zeros(0,2); 
-			% no control points (each row (x,y))
+	% no control points (each row (x,y))
 	handles.triangles = zeros(0,3); 
-			% no polygons yet, each indexes 3 ctrl pts
+	% no polygons yet, each indexes 3 ctrl pts
 	handles.room_ids     = []; % one per triangle
 	handles.current_room = 1;
-
 
 	% initialize plot handles
 	handles.wall_samples_plot = 0; % not valid handle
@@ -84,6 +79,7 @@ function TraceFP_OpeningFcn(hObject, eventdata, handles, varargin)
 	% UIWAIT makes TraceFP wait for user response (see UIRESUME)
 	%uiwait(handles.figure1);
     
+    % fills button on the right with corresponding image
     [a,map]=imread('img/dot.jpg');
     [r,c,d]=size(a); 
     x=ceil(r/30); 
@@ -139,21 +135,6 @@ function TraceFP_OpeningFcn(hObject, eventdata, handles, varargin)
     g=a(1:x:end,1:y:end,:);
     g(g==255)=5.5*255;
     set(handles.clear,'CData',g);
-    
-    DEBUGGING = false;
-    if (DEBUGGING)
-        fp = read_fp(fullfile('/Users/tomlai/Documents/Projects/TraceFP/sample/mulford2/mulfordf2_gen1_s0.01.fp'));
-        handles.control_points = fp.verts;
-        handles.triangles      = fp.tris;
-        handles.room_ids       = fp.room_inds;
-        handles.current_room   = 1;        
-        handles.wall_samples = readMapData(fullfile('/Users/tomlai/Documents/Projects/TraceFP/sample/mulford2/mulfordf2_gen1_s0.01.dq'));
-        TraceFP_render(hObject, handles, true);
-        handles=guidata(hObject);
-        global undo_history redo_history
-        undo_history.push_back(handles);
-        redo_history.clear();
-    end
 
 % --- Outputs from this function are returned to the command line.
 function varargout = TraceFP_OutputFcn(hObject, eventdata, handles) 
@@ -164,7 +145,6 @@ function varargout = TraceFP_OutputFcn(hObject, eventdata, handles)
 
 	% Get default command line output from handles structure
 	%varargout{1} = handles.output;
-
 
 % --- Executes on button press in show_wall_samples.
 function show_wall_samples_Callback(hObject, eventdata, handles)
@@ -200,8 +180,7 @@ function show_control_points_Callback(hObject, eventdata, handles)
 	else
 		fprintf('[TraceFP]\tHide control points\n');
 		set(handles.control_points_plot, 'Visible', 'off');
-	end
-
+    end
 
 % --- Executes on button press in show_floorplan.
 function show_floorplan_Callback(hObject, eventdata, handles)
@@ -218,8 +197,7 @@ function show_floorplan_Callback(hObject, eventdata, handles)
 	else
 		fprintf('[TraceFP]\tHide triangles\n');
 		set(handles.triangles_plot, 'Visible', 'off');
-	end
-
+    end
 
 % --- Executes on button press in new_triangle.
 function new_triangle_Callback(hObject, eventdata, handles)
@@ -271,8 +249,6 @@ function new_triangle_Callback(hObject, eventdata, handles)
         redo_history.clear();
     end
 
-
-
 % --- Executes on button press in remove_triangle.
 function remove_triangle_Callback(hObject, eventdata, handles)
 % hObject    handle to figure (see GCBO)
@@ -303,7 +279,6 @@ function remove_triangle_Callback(hObject, eventdata, handles)
         undo_history.push_back(handles);
         redo_history.clear();
     end
-
 
 % --- Executes on button press in set_room.
 function set_room_Callback(hObject, eventdata, handles)
@@ -346,8 +321,6 @@ function set_room_Callback(hObject, eventdata, handles)
 	guidata(hObject, handles);
     handles=guidata(hObject);
 
-
-
 % --- Executes on button press in new_point.
 function new_point_Callback(hObject, eventdata, handles)
 % hObject    handle to figure (see GCBO)
@@ -372,7 +345,6 @@ function new_point_Callback(hObject, eventdata, handles)
             return;
         end
     end
-
 
 % --- Executes on button press in merge_and_move_point.
 function merge_and_move_point_Callback(hObject, eventdata, handles)
@@ -411,8 +383,6 @@ function merge_and_move_point_Callback(hObject, eventdata, handles)
         redo_history.clear();
         fprintf('[TraceFP]\t\tpoint moved\n');
     end
-
-
 
 % --- Executes on button press in remove_point.
 function remove_point_Callback(hObject, eventdata, handles)
@@ -454,8 +424,6 @@ function remove_point_Callback(hObject, eventdata, handles)
         undo_history.push_back(handles);
         redo_history.clear();
     end
-	
-
 
 % --------------------------------------------------------------------
 function open_wall_samples_ClickedCallback(hObject, eventdata, handles)
@@ -482,7 +450,6 @@ function open_wall_samples_ClickedCallback(hObject, eventdata, handles)
     undo_history.push_back(handles);
     redo_history.clear();
 	fprintf('[TraceFP]\t\tDONE\n');
-
 
 % --------------------------------------------------------------------
 function save_fp_ClickedCallback(hObject, eventdata, handles)
@@ -517,39 +484,12 @@ function save_fp_ClickedCallback(hObject, eventdata, handles)
 	write_fp(fullfile([pathname, fpfile]), floorplan);
 	fprintf('[TraceFP]\t\tDONE\n');
 
-
-
-
 % --- Executes on button press in update_triangle_room.
 function update_triangle_room_Callback(hObject, eventdata, handles)
 % hObject    handle to figure (see GCBO)
 % eventdata  reserved - to be defined in a future version of MATLAB
 % handles    structure with handles and user data (see GUIDATA)
     
-%     % best rendering efficient code (for swift debugging)
-%     fprintf('[TraceFP]\tUpdate triangle room...\n');
-%     change = false;
-% 	while (true)
-%         % find a triangle
-%         ind = TraceFP_findtri(handles);
-%         if(ind <= 0)
-%             fprintf('[TraceFP]\t\tNo triangle selected.  Exiting.\n');
-%             if (change)
-%                 TraceFP_render(hObject, handles, false);
-%                 handles=guidata(hObject);
-%                 global undo_history redo_history
-%                 undo_history.push_back(handles);
-%                 redo_history.clear();
-%                 fprintf('[TraceFP]\t\tUpdated to %d.\n', handles.current_room);
-%             end
-%             return;
-%         end
-% 
-%         % change its room to current
-%         change = true;
-%         handles.room_ids(ind) = handles.current_room;
-%     end
-
     % best responsiveness code
 	fprintf('[TraceFP]\tUpdate triangle room...\n');
 	while (true)
@@ -609,7 +549,6 @@ function open_fp_ClickedCallback(hObject, eventdata, handles)
     redo_history.clear();
 	fprintf('[TraceFP]\t\tDONE\n');
 
-
 % --- Executes on button press in button New Polygon.
 function new_polygon_clicked_Callback(hObject, eventdata, handles)
 % hObject    handle to figure (see GCBO)
@@ -659,7 +598,6 @@ function new_polygon_clicked_Callback(hObject, eventdata, handles)
         redo_history.clear();
     end
 
-
 % --- Executes on button press in clear.
 function clear_Callback(hObject, eventdata, handles)
 % hObject    handle to figure (see GCBO)
@@ -688,7 +626,6 @@ function clear_Callback(hObject, eventdata, handles)
     redo_history = TraceFP_history();
     undo_history = TraceFP_history(handles);
 
-
 % --------------------------------------------------------------------
 function undo_ClickedCallback(hObject, eventdata, handles)
 % hObject    handle to figure (see GCBO)
@@ -711,7 +648,6 @@ function undo_ClickedCallback(hObject, eventdata, handles)
     delete(node);
     TraceFP_render(hObject, handles, false);
 
-
 % --------------------------------------------------------------------
 function redo_ClickedCallback(hObject, eventdata, handles)
 % hObject    handle to figure (see GCBO)
@@ -731,7 +667,6 @@ function redo_ClickedCallback(hObject, eventdata, handles)
     handles.align_line_tolerance = undo_history.tail.align_line_tolerance;
     delete(node);
     TraceFP_render(hObject, handles, false);
-
 
 % --------------------------------------------------------------------
 function fit_to_line_ClickedCallback(hObject, eventdata, handles)
@@ -765,7 +700,6 @@ function fit_to_line_ClickedCallback(hObject, eventdata, handles)
         redo_history.clear();
         fprintf('[TraceFP]\t\tpoints fit to line\n');
     end
-
 
 % --------------------------------------------------------------------
 function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
@@ -835,7 +769,6 @@ function fit_to_orthogonal_lines_ClickedCallback(hObject, eventdata, handles)
         fprintf('[TraceFP]\t\tpoints fit to orthogonal lines\n');
     end
 
-
 % --------------------------------------------------------------------
 function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
 % hObject    handle to figure (see GCBO)
@@ -887,7 +820,6 @@ function fit_to_existing_line_ClickedCallback(hObject, eventdata, handles)
         fprintf('[TraceFP]\t\tpoints fit to existing line\n');
     end
 
-
 % --------------------------------------------------------------------
 function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
 % hObject    handle to figure (see GCBO)
@@ -929,7 +861,6 @@ function merge_nearby_point_ClickedCallback(hObject, eventdata, handles)
     redo_history.clear();
     fprintf('[TraceFP]\t\tNearby points clustered together.\n');
 
-
 % --------------------------------------------------------------------
 function merge_points_ClickedCallback(hObject, eventdata, handles)
 % hObject    handle to figure (see GCBO)
@@ -967,7 +898,6 @@ function merge_points_ClickedCallback(hObject, eventdata, handles)
         undo_history.push_back(handles);
         redo_history.clear();
     end
-
 
 % --------------------------------------------------------------------
 function add_point_to_room_ClickedCallback(hObject, eventdata, handles)
@@ -1074,7 +1004,6 @@ function add_point_to_room_ClickedCallback(hObject, eventdata, handles)
         fprintf('[TraceFP]\tDONE inserting new point for current room\n');
     end
 
-
 % --------------------------------------------------------------------
 function refresh_ClickedCallback(hObject, eventdata, handles)
 % hObject    handle to figure (see GCBO)
@@ -1087,8 +1016,6 @@ function refresh_ClickedCallback(hObject, eventdata, handles)
     undo_history.push_back(handles);
     redo_history.clear(); 
     fprintf('[TraceFP]\tfloorplan validated and refreshed\n');
-    
-
 
 % --------------------------------------------------------------------
 function align_lines_ClickedCallback(hObject, eventdata, handles)
@@ -1171,10 +1098,6 @@ function align_lines_ClickedCallback(hObject, eventdata, handles)
     undo_history.push_back(handles);
     redo_history.clear(); 
     fprintf('[TraceFP]\tfloorplan aligned to selected direction\n');
-    
-
-    
-
 
 % --------------------------------------------------------------------
 function set_constraints_ClickedCallback(hObject, eventdata, handles)
@@ -1197,8 +1120,6 @@ function set_constraints_ClickedCallback(hObject, eventdata, handles)
     global undo_history redo_history
     undo_history.push_back(handles);
     redo_history.clear(); 
-        
-
 
 % --------------------------------------------------------------------
 function remove_point_from_polygon_ClickedCallback(hObject, eventdata, handles)
@@ -1296,8 +1217,6 @@ function remove_point_from_polygon_ClickedCallback(hObject, eventdata, handles)
     undo_history.push_back(handles);
     redo_history.clear(); 
     fprintf('[TraceFP]\tpoints removed from room\n');
-    
-
 
 % --------------------------------------------------------------------
 function split_triangle_ClickedCallback(hObject, eventdata, handles)

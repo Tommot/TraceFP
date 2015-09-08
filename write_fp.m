@@ -52,18 +52,19 @@ function [] = write_fp(filename, fp)
 
 	% write the rooms to file
 	for i = 1:fp.num_rooms
-		
-		% write out the heights for this room
-		fprintf(fid, '%f %f', ...
-			fp.room_floors(i), fp.room_ceilings(i));
 
-		% find all the triangles in this room
-		T = find(fp.room_inds == i) - 1;
-	
-		% export the triangles
-		fprintf(fid, ' %d', length(T));
-		fprintf(fid, ' %d', T);
-		fprintf(fid, '\n');
+        % find all the triangles in this room
+        T = find(fp.room_inds == i) - 1;
+
+        if (length(T) > 0)
+            % write out the heights for this room
+            fprintf(fid, '%f %f', ...
+                fp.room_floors(i), fp.room_ceilings(i));
+            % export the triangles
+            fprintf(fid, ' %d', length(T));
+            fprintf(fid, ' %d', T);
+            fprintf(fid, '\n');
+        end
 	end
 
 	% clean up
